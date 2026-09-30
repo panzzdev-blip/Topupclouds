@@ -173,7 +173,7 @@ app.get('/api/admin/stats',admin,(req,res)=>res.json({users:db.prepare('SELECT C
 
 app.get('/health',(req,res)=>res.json({ok:true,service:'top-up-clouds'}));
 app.get('/admin',(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
-app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+app.get('/{*splat}',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 
 const port=Number(process.env.PORT||3000);
 app.listen(port,()=>console.log(`Top up Clouds running on http://localhost:${port}`));
