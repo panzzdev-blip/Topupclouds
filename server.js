@@ -11,7 +11,7 @@ dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json({ limit: '1mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 const db = new Database(path.join(__dirname, 'data.db'));
 db.pragma('journal_mode = WAL');
@@ -172,8 +172,8 @@ app.get('/api/admin/orders',admin,(req,res)=>res.json(db.prepare('SELECT o.*,u.e
 app.get('/api/admin/stats',admin,(req,res)=>res.json({users:db.prepare('SELECT COUNT(*) c FROM users').get().c,products:db.prepare('SELECT COUNT(*) c FROM products WHERE active=1').get().c,available_codes:db.prepare("SELECT COUNT(*) c FROM codes WHERE status='available'").get().c,paid_orders:db.prepare("SELECT COUNT(*) c FROM orders WHERE payment_status='paid'").get().c}));
 
 app.get('/health',(req,res)=>res.json({ok:true,service:'top-up-clouds'}));
-app.get('/admin',(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
-app.get('/{*splat}',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+app.get('/admin',(req,res)=>res.sendFile(path.join(__dirname,'admin.html')));
+app.get('/{*splat}',(req,res)=>res.sendFile(path.join(__dirname,'index.html')));
 
 const port=Number(process.env.PORT||3000);
 app.listen(port,()=>console.log(`Top up Clouds running on http://localhost:${port}`));
