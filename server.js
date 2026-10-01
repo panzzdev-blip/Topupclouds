@@ -15,11 +15,11 @@ app.use(express.json({ limit: '1mb' }));
 
 const resolvePublicDir = () => {
   const candidates = [
-    path.join(__dirname, 'public'),
     path.join(__dirname, 'Public'),
+    path.join(__dirname, 'public'),
     __dirname
   ];
-  return candidates.find(dir => fs.existsSync(dir)) || path.join(__dirname, 'public');
+  return candidates.find(dir => fs.existsSync(dir) && fs.statSync(dir).isDirectory()) || path.join(__dirname, 'Public');
 };
 
 const publicDir = resolvePublicDir();
@@ -159,10 +159,9 @@ app.post('/api/midtrans/notification',(req,res)=>{
   res.send('OK');
 });
 
-app.get('/api/orders',auth,(req,res)=>res.json(db.prepare(`SELECT o.id,o.amount,o.payment_status,o.redeem_code,o.created_at,o.paid_at,p.provider,p.name,p.duration_days FROM orders o JOIN products p ON p.id=o.product_id WHERE o.user_id=? ORDER BY o.created_at DESC`).all(req.userId)));
-
+app.get('/api/orders',auth,(req,res)=>res.json(db.prepare('SELECT o.id,o.amount,o.payment_status,o.redeem_code,o.created_at,o.paid_at,p.provider,p.name,p.duration_days FROM orders o JOIN products p ON p.id=o.product_id WHERE o.user_id=? ORDER BY o.created_at DESC').all(req.userId)));
 app.get('/api/orders/:id',auth,(req,res)=>{
-  const o=db.prepare(`SELECT o.id,o.amount,o.payment_status,o.redeem_code,o.created_at,o.paid_at,p.provider,p.name,p.duration_days FROM orders o JOIN products p ON p.id=o.product_id WHERE o.id=? AND o.user_id=?`).get(req.params.id,req.userId);
+  const o=db.prepare('SELECT o.id,o.amount,o.payment_status,o.redeem_code,o.created_at,o.paid_at,p.provider,p.name,p.duration_days FROM orders o JOIN products p ON p.id=o.product_id WHERE o.id=? AND o.user_id=?').get(req.params.id,req.userId);
   if(!o)return res.status(404).json({error:'Order tidak ditemukan'}); res.json(o);
 });
 
@@ -172,7 +171,7 @@ app.post('/api/admin/products',admin,(req,res)=>{
   const r=db.prepare('INSERT INTO products(provider,name,duration_days,price) VALUES(?,?,?,?)').run(provider,name,duration,price); res.json({id:r.lastInsertRowid});
 });
 app.get('/api/admin/products',admin,(req,res)=>res.json(db.prepare('SELECT * FROM products ORDER BY id DESC').all()));
-app.patch('/api/admin/products/:id',admin,(req,res)=>{const fields=[],values=[];for(const k of ['provider','name','duration_days','price','active'])if(req.body[k]!==undefined){fields.push(`${k}=?`);values.push(req.body[k]);}if(!fields.length)return res.status(400).json({error:'Tidak ada perubahan'});values.push(req.params.id);db.prepare(`UPDATE products SET ${fields.join(',')} WHERE id=?`).run(...values);res.json({ok:true});});
+app.patch('/api/admin/products/:id',admin,(req,res)=>{const fields=[],values=[];for(const k of ['provider','name','duration_days','price','active'])if(req.body[k]!==undefined){fields.push(`${k}=?`);values.push(req.body[k]);}if(!fields.length)return res.status(400).json({error:'Tidak ada field yang diubah'});values.push(Number(req.params.id));db.prepare(`UPDATE products SET ${fields.join(',')} WHERE id=?`).run(...values);res.json({ok:true});});
 app.post('/api/admin/codes',admin,(req,res)=>{
   const productId=Number(req.body.product_id), codes=Array.isArray(req.body.codes)?req.body.codes.map(x=>String(x).trim()).filter(Boolean):[];
   if(!productId||!codes.length)return res.status(400).json({error:'product_id dan codes wajib diisi'});
@@ -181,7 +180,7 @@ app.post('/api/admin/codes',admin,(req,res)=>{
 });
 app.get('/api/admin/codes',admin,(req,res)=>res.json(db.prepare('SELECT c.id,c.product_id,p.provider,p.name,p.duration_days,c.redeem_code,c.status,c.order_id FROM codes c JOIN products p ON p.id=c.product_id ORDER BY c.id DESC').all()));
 app.get('/api/admin/orders',admin,(req,res)=>res.json(db.prepare('SELECT o.*,u.email,p.provider,p.name,p.duration_days FROM orders o LEFT JOIN users u ON u.id=o.user_id JOIN products p ON p.id=o.product_id ORDER BY o.created_at DESC').all()));
-app.get('/api/admin/stats',admin,(req,res)=>res.json({users:db.prepare('SELECT COUNT(*) c FROM users').get().c,products:db.prepare('SELECT COUNT(*) c FROM products WHERE active=1').get().c,available_codes:db.prepare("SELECT COUNT(*) c FROM codes WHERE status='available'").get().c,paid_orders:db.prepare("SELECT COUNT(*) c FROM orders WHERE payment_status='paid'").get().c}));
+app.get('/api/admin/stats',admin,(req,res)=>res.json({users:db.prepare('SELECT COUNT(*) c FROM users').get().c,products:db.prepare('SELECT COUNT(*) c FROM products WHERE active=1').get().c,available:db.prepare('SELECT COUNT(*) c FROM codes WHERE status="available"').get().c,orders:db.prepare('SELECT COUNT(*) c FROM orders').get().c}));
 
 app.get('/health',(req,res)=>res.json({ok:true,service:'top-up-clouds'}));
 app.get('/admin',(req,res)=>res.sendFile(path.join(publicDir,'admin.html')));
