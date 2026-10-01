@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <title>Top up Clouds — Cloud Phone Digital Store</title>
 <meta name="description" content="Top up Clouds — toko digital cloud phone dengan Redeem Code, checkout dan riwayat pesanan.">
 
@@ -22,13 +21,8 @@
   --mint:#67f5bd;
   --gold:#ffd66b;
   --danger:#ff8e9e;
-  --night-bg:#020711;
-  --night-card:#071321;
+  --text:#f7fbff;
 }
-
-/* =========================
-   RESET
-========================= */
 
 *{
   box-sizing:border-box;
@@ -40,111 +34,81 @@ html{
 
 body{
   margin:0;
-  color:#f7fbff;
+  color:var(--text);
   font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:
-    linear-gradient(
-      #78d8ff 0,
-      #2c9ed2 24%,
-      #0b4671 55%,
-      #061222 100%
-    );
+  background:linear-gradient(
+    #78d8ff 0,
+    #2c9ed2 24%,
+    #0b4671 55%,
+    #061222 100%
+  );
   min-height:100vh;
   overflow-x:hidden;
-  transition:
-    background .5s ease,
-    color .3s ease;
+  transition:background .4s ease,color .3s ease;
 }
 
-/* =========================
+/* =========================================
    NIGHT MODE
-========================= */
+========================================= */
 
-body.night-mode{
-  background:
-    linear-gradient(
-      180deg,
-      #020711 0%,
-      #031323 45%,
-      #02050b 100%
-    );
+body.night{
+  background:linear-gradient(
+    180deg,
+    #020713 0%,
+    #061326 35%,
+    #081b32 70%,
+    #02060e 100%
+  );
 }
 
-body.night-mode .sky{
-  background:
-    radial-gradient(
-      circle at 80% 15%,
-      #123e62 0,
-      transparent 25%
-    ),
-    linear-gradient(
-      180deg,
-      #020711 0%,
-      #041526 50%,
-      #01040a 100%
-    );
+body.night .sky{
+  background:linear-gradient(
+    180deg,
+    #020713 0%,
+    #061326 45%,
+    #081b32 75%,
+    #02060e 100%
+  );
 }
 
-body.night-mode .sun{
+body.night .sun{
+  width:145px;
+  height:145px;
   background:#dcecff;
   box-shadow:
-    0 0 50px #9fd4ff66,
-    0 0 120px #78bfff33;
-  opacity:.75;
+    0 0 45px #b9dcff88,
+    0 0 100px #7db8ff33;
 }
 
-body.night-mode .cloud{
-  background:#d8e9f6aa;
+body.night .cloud{
+  opacity:.13;
 }
 
-body.night-mode header{
-  background:#020914d9;
+body.night .mist{
+  background:radial-gradient(
+    ellipse at center,
+    #3e8cff18,
+    transparent 65%
+  );
 }
 
-body.night-mode .hero-art{
-  background:
-    linear-gradient(
-      160deg,
-      #ffffff09,
-      #000a16aa
-    );
-}
-
-body.night-mode .glass{
-  background:#020b17dd;
-}
-
-body.night-mode .card{
-  background:
-    linear-gradient(
-      160deg,
-      #ffffff09,
-      #01070fcc
-    );
-}
-
-body.night-mode .feature{
-  background:#020a14dd;
-}
-
-/* =========================
+/* =========================================
    SKY
-========================= */
+========================================= */
 
 .sky{
   position:fixed;
   inset:0;
   z-index:-10;
   overflow:hidden;
-  background:
-    linear-gradient(
-      180deg,
-      #83e0ff 0%,
-      #42b7e8 32%,
-      #0d5a86 66%,
-      #061324 100%
-    );
-  transition:background .6s ease;
+  background:linear-gradient(
+    180deg,
+    #83e0ff 0%,
+    #42b7e8 32%,
+    #0d5a86 66%,
+    #061324 100%
+  );
+  transition:background .5s ease;
 }
 
 .sun{
@@ -159,7 +123,7 @@ body.night-mode .feature{
     0 0 80px #fff3a899,
     0 0 160px #ffe17a55;
   opacity:.95;
-  transition:.5s;
+  transition:all .5s ease;
 }
 
 .cloud{
@@ -173,6 +137,7 @@ body.night-mode .feature{
   box-shadow:0 16px 35px #063a5b22;
   opacity:.82;
   animation:cloudMove linear infinite;
+  will-change:transform;
 }
 
 .cloud:before,
@@ -231,6 +196,7 @@ body.night-mode .feature{
   from{
     left:-340px;
   }
+
   to{
     left:calc(100vw + 340px);
   }
@@ -242,47 +208,101 @@ body.night-mode .feature{
   right:-10%;
   bottom:-10%;
   height:42%;
-  background:
-    radial-gradient(
-      ellipse at center,
-      #7edaff33,
-      transparent 65%
-    );
+  background:radial-gradient(
+    ellipse at center,
+    #7edaff33,
+    transparent 65%
+  );
   filter:blur(25px);
 }
 
-/* =========================
+/* =========================================
+   SCROLL PERFORMANCE
+========================================= */
+
+body.is-scrolling .cloud,
+body.is-scrolling .ring,
+body.is-scrolling .mini-cloud{
+  animation-play-state:paused !important;
+}
+
+@media(max-width:780px){
+
+  html{
+    scroll-behavior:auto;
+  }
+
+  header{
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+  }
+
+  .glass,
+  .card,
+  .hero-art,
+  .account-menu,
+  .modal{
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+  }
+
+  .cloud{
+    animation-duration:90s;
+    opacity:.45;
+  }
+
+  .c2,
+  .c3,
+  .c4{
+    display:none;
+  }
+
+  .mist{
+    filter:blur(12px);
+  }
+
+  .ring{
+    animation-duration:24s;
+  }
+
+  .hero-art{
+    box-shadow:
+      inset 0 1px #ffffff22,
+      0 15px 40px #00182c44;
+  }
+}
+
+/* =========================================
    APP
-========================= */
+========================================= */
 
 .app{
   min-height:100vh;
-  background:linear-gradient(#ffffff08,#061222a8);
+  background:linear-gradient(
+    #ffffff08,
+    #061222a8
+  );
 }
 
-/* =========================
+/* =========================================
    HEADER
-========================= */
+========================================= */
 
 header{
   position:sticky;
   top:0;
   z-index:20;
   height:74px;
-  padding:
-    0
-    max(4%,calc((100% - 1180px)/2));
-
+  padding:0 max(
+    4%,
+    calc((100% - 1180px)/2)
+  );
   display:flex;
   align-items:center;
   justify-content:space-between;
-
   background:#0414269e;
   border-bottom:1px solid #ffffff20;
-
   backdrop-filter:blur(18px);
-
-  transition:.3s;
 }
 
 .brand{
@@ -301,15 +321,12 @@ header{
   place-items:center;
   color:#06304a;
   font-weight:1000;
-
-  background:
-    linear-gradient(
-      145deg,
-      #fff,
-      #a8ecff 55%,
-      #64d8ff
-    );
-
+  background:linear-gradient(
+    145deg,
+    #fff,
+    #a8ecff 55%,
+    #64d8ff
+  );
   box-shadow:0 8px 30px #4ed9ff55;
 }
 
@@ -332,6 +349,7 @@ header{
 .head-actions{
   display:flex;
   gap:8px;
+  align-items:center;
 }
 
 .head-actions button{
@@ -345,35 +363,129 @@ header{
 }
 
 .head-actions .login{
-  background:
-    linear-gradient(
-      135deg,
-      var(--mint),
-      #7be5ff
-    );
-
+  background:linear-gradient(
+    135deg,
+    var(--mint),
+    #7be5ff
+  );
   color:#042035;
   border:0;
   box-shadow:0 8px 25px #5ef1c444;
 }
 
-/* =========================
+/* =========================================
+   ACCOUNT MENU
+========================================= */
+
+.account-wrap{
+  position:relative;
+}
+
+.account-menu{
+  position:absolute;
+  right:0;
+  top:52px;
+  width:260px;
+  background:linear-gradient(
+    160deg,
+    #0b2940,
+    #061522
+  );
+  border:1px solid #ffffff25;
+  border-radius:18px;
+  padding:10px;
+  box-shadow:0 25px 70px #0009;
+  backdrop-filter:blur(18px);
+  display:none;
+}
+
+.account-menu.show{
+  display:block;
+}
+
+.account-user{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:10px;
+  border-bottom:1px solid #ffffff15;
+  margin-bottom:6px;
+}
+
+.avatar{
+  width:43px;
+  height:43px;
+  border-radius:50%;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  flex:none;
+  background:linear-gradient(
+    135deg,
+    #7af4c0,
+    #72dcff
+  );
+  color:#062039;
+  font-weight:1000;
+}
+
+.avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.account-info{
+  min-width:0;
+}
+
+.account-name{
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.account-email{
+  color:#9fb9c8;
+  font-size:11px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.account-item{
+  width:100%;
+  border:0;
+  background:transparent;
+  color:#eaf7ff;
+  text-align:left;
+  padding:11px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.account-item:hover{
+  background:#ffffff0d;
+}
+
+.account-item.danger{
+  color:#ff9aaa;
+}
+
+/* =========================================
    MAIN
-========================= */
+========================================= */
 
 main{
   width:min(1180px,92%);
   margin:auto;
 }
 
-/* =========================
-   HERO
-========================= */
-
 .hero{
   min-height:650px;
   padding:70px 0 50px;
-
   display:grid;
   grid-template-columns:1.08fr .92fr;
   gap:35px;
@@ -384,21 +496,15 @@ main{
   display:inline-flex;
   align-items:center;
   gap:8px;
-
   padding:8px 11px;
-
   border:1px solid #ffffff38;
   background:#ffffff13;
-
   border-radius:99px;
-
   font-size:11px;
   font-weight:950;
   letter-spacing:1.5px;
   text-transform:uppercase;
-
   color:#eaffff;
-
   backdrop-filter:blur(10px);
 }
 
@@ -412,22 +518,18 @@ main{
   line-height:.92;
   letter-spacing:-5px;
   margin:18px 0 20px;
-
   text-shadow:0 12px 45px #01213c77;
 }
 
 .hero h1 span{
-  background:
-    linear-gradient(
-      90deg,
-      #fff,
-      #b9f2ff,
-      #8ff5d1
-    );
-
+  background:linear-gradient(
+    90deg,
+    #fff,
+    #b9f2ff,
+    #8ff5d1
+  );
   -webkit-background-clip:text;
   background-clip:text;
-
   color:transparent;
 }
 
@@ -468,16 +570,12 @@ main{
   padding:13px 18px;
   font-weight:950;
   cursor:pointer;
-
-  background:
-    linear-gradient(
-      135deg,
-      #7af4c0,
-      #72dfff
-    );
-
+  background:linear-gradient(
+    135deg,
+    #7af4c0,
+    #72dfff
+  );
   color:#062039;
-
   box-shadow:0 15px 35px #4cdfff33;
 }
 
@@ -487,38 +585,30 @@ main{
   padding:13px 18px;
   font-weight:850;
   cursor:pointer;
-
   background:#041a2b66;
   color:#fff;
 }
 
-/* =========================
+/* =========================================
    HERO ART
-========================= */
+========================================= */
 
 .hero-art{
   height:390px;
-
   border:1px solid #ffffff2c;
   border-radius:32px;
-
-  background:
-    linear-gradient(
-      160deg,
-      #ffffff20,
-      #00192d55
-    );
-
+  background:linear-gradient(
+    160deg,
+    #ffffff20,
+    #00192d55
+  );
   display:grid;
   place-items:center;
-
   position:relative;
   overflow:hidden;
-
   box-shadow:
     inset 0 1px #ffffff22,
     0 35px 90px #00182c55;
-
   backdrop-filter:blur(12px);
 }
 
@@ -576,23 +666,17 @@ main{
 .phone{
   width:170px;
   height:290px;
-
   border:6px solid #d9f5ff;
   border-radius:30px;
-
-  background:
-    linear-gradient(
-      160deg,
-      #b5f2ff,
-      #1a8cc0 35%,
-      #08243d 78%
-    );
-
+  background:linear-gradient(
+    160deg,
+    #b5f2ff,
+    #1a8cc0 35%,
+    #08243d 78%
+  );
   box-shadow:0 30px 80px #00132299;
-
   position:relative;
   z-index:2;
-
   transform:rotate(-5deg);
 }
 
@@ -602,10 +686,8 @@ main{
   top:10px;
   left:50%;
   transform:translateX(-50%);
-
   width:62px;
   height:8px;
-
   border-radius:99px;
   background:#08243d;
 }
@@ -613,31 +695,23 @@ main{
 .phone:after{
   content:"TOP UP\A CLOUDS";
   white-space:pre;
-
   position:absolute;
   inset:0;
-
   display:grid;
   place-content:center;
-
   text-align:center;
-
   font-weight:1000;
   letter-spacing:2px;
   line-height:1.8;
-
   color:#eaffff;
 }
 
 .ring{
   position:absolute;
-
   width:250px;
   height:250px;
-
   border:1px solid #ffffff44;
   border-radius:50%;
-
   animation:spin 14s linear infinite;
 }
 
@@ -655,20 +729,15 @@ main{
   }
 }
 
-/* =========================
+/* =========================================
    SHOP
-========================= */
+========================================= */
 
 .glass{
   border:1px solid #ffffff26;
-
   background:#06192aab;
-
   backdrop-filter:blur(18px);
-
-  box-shadow:
-    0 25px 70px #00182c55;
-
+  box-shadow:0 25px 70px #00182c55;
   border-radius:24px;
 }
 
@@ -705,22 +774,18 @@ main{
   border:1px solid #ffffff28;
   background:#ffffff0b;
   color:#cfe5f0;
-
   padding:10px 14px;
-
   border-radius:11px;
   white-space:nowrap;
   cursor:pointer;
 }
 
 .tab.active{
-  background:
-    linear-gradient(
-      135deg,
-      var(--mint),
-      #74ddff
-    );
-
+  background:linear-gradient(
+    135deg,
+    var(--mint),
+    #74ddff
+  );
   border-color:transparent;
   color:#062039;
   font-weight:950;
@@ -735,16 +800,12 @@ main{
 .card{
   border:1px solid #ffffff20;
   border-radius:18px;
-
-  background:
-    linear-gradient(
-      160deg,
-      #ffffff10,
-      #031322a6
-    );
-
+  background:linear-gradient(
+    160deg,
+    #ffffff10,
+    #031322a6
+  );
   padding:18px;
-
   box-shadow:0 16px 40px #00101f33;
 }
 
@@ -761,12 +822,9 @@ main{
 .tag{
   font-size:10px;
   color:#8cf7d1;
-
   border:1px solid #75f4c34d;
   background:#75f4c314;
-
   padding:5px 8px;
-
   border-radius:99px;
 }
 
@@ -798,13 +856,10 @@ main{
 .duration{
   font-size:11px;
   padding:8px 2px;
-
   border:1px solid #ffffff22;
   border-radius:8px;
-
   background:#03101d;
   color:#b7d1df;
-
   cursor:pointer;
 }
 
@@ -823,21 +878,15 @@ main{
 
 .buy{
   width:100%;
-
   border:0;
   border-radius:10px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #dffff2,
-      #8feeff
-    );
-
+  background:linear-gradient(
+    135deg,
+    #dffff2,
+    #8feeff
+  );
   color:#052037;
-
   padding:11px;
-
   font-weight:950;
   cursor:pointer;
 }
@@ -847,26 +896,22 @@ main{
   cursor:not-allowed;
 }
 
-/* =========================
+/* =========================================
    FEATURES
-========================= */
+========================================= */
 
 .features{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:12px;
-
   margin:25px 0 50px;
 }
 
 .feature{
   border:1px solid #ffffff1f;
   border-radius:16px;
-
   padding:17px;
-
   background:#04182a99;
-
   backdrop-filter:blur(10px);
 }
 
@@ -881,16 +926,14 @@ main{
   line-height:1.5;
 }
 
-/* =========================
+/* =========================================
    FOOTER
-========================= */
+========================================= */
 
 footer{
   border-top:1px solid #ffffff20;
-
   margin-top:20px;
   padding:25px 0;
-
   color:#aac4d3;
   font-size:12px;
 }
@@ -901,43 +944,37 @@ footer{
   gap:15px;
 }
 
-/* =========================
+/* =========================================
    MODAL
-========================= */
+========================================= */
 
 .overlay{
   display:none;
-
   position:fixed;
   inset:0;
-
   background:#00101bcc;
-
   z-index:50;
-
   align-items:center;
   justify-content:center;
-
   padding:16px;
+}
+
+.overlay.show{
+  display:flex;
 }
 
 .modal{
   width:min(560px,100%);
   max-height:92vh;
   overflow:auto;
-
-  background:
-    linear-gradient(
-      160deg,
-      #0a2940,
-      #061522
-    );
-
+  background:linear-gradient(
+    160deg,
+    #0a2940,
+    #061522
+  );
   border:1px solid #ffffff2b;
   border-radius:22px;
-
   padding:22px;
-
   box-shadow:0 30px 100px #000c;
 }
 
@@ -976,62 +1013,53 @@ footer{
   margin-bottom:7px;
 }
 
-.field input{
+.field input,
+.field textarea,
+.field select{
   width:100%;
-
   background:#03101b;
   color:white;
-
   border:1px solid #ffffff25;
-
   padding:12px;
-
   border-radius:10px;
-
   outline:0;
+  font-family:inherit;
 }
 
-.field input:focus{
+.field textarea{
+  resize:vertical;
+  min-height:90px;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus{
   border-color:#72ddff;
 }
 
 .primary{
   width:100%;
-
   border:0;
-
-  background:
-    linear-gradient(
-      135deg,
-      var(--mint),
-      #72dcff
-    );
-
+  background:linear-gradient(
+    135deg,
+    var(--mint),
+    #72dcff
+  );
   color:#052039;
-
   font-weight:950;
-
   padding:13px;
-
   border-radius:10px;
-
   cursor:pointer;
 }
 
 .secondary{
   width:100%;
-
   border:1px solid #ffffff24;
-
   background:#ffffff0b;
   color:white;
-
   padding:12px;
-
   border-radius:10px;
-
   cursor:pointer;
-
   margin-top:8px;
 }
 
@@ -1039,11 +1067,8 @@ footer{
   display:flex;
   align-items:center;
   gap:10px;
-
   margin:18px 0 12px;
-
   color:#bcd3df;
-
   font-size:11px;
   font-weight:800;
 }
@@ -1067,19 +1092,12 @@ footer{
   align-items:center;
   justify-content:center;
   gap:9px;
-
   padding:11px;
-
   border-radius:11px;
-
   background:#ffffff09;
-
   border:1px solid #ffffff24;
-
   color:#fff;
-
   font-weight:850;
-
   cursor:pointer;
 }
 
@@ -1091,34 +1109,23 @@ footer{
 .ico{
   width:22px;
   height:22px;
-
   display:grid;
   place-items:center;
-
   border-radius:6px;
-
   background:#fff;
   color:#061522;
-
   font-size:12px;
   font-weight:1000;
 }
 
 .note{
   background:#ffd66b10;
-
   border:1px solid #ffd66b32;
-
   color:#e1c982;
-
   padding:11px;
-
   border-radius:10px;
-
   font-size:11px;
-
   line-height:1.5;
-
   margin:12px 0;
 }
 
@@ -1135,345 +1142,265 @@ footer{
 .orderline{
   display:flex;
   justify-content:space-between;
-
   gap:12px;
-
   font-size:13px;
-
   margin:8px 0;
-
   color:#bdd2df;
 }
 
 .codebox{
   font-size:18px;
   letter-spacing:1px;
-
   background:#020c15;
-
   border:1px dashed var(--mint);
-
   padding:15px;
-
   border-radius:12px;
-
   color:var(--mint);
-
   word-break:break-all;
-
   text-align:center;
 }
 
 .status{
   display:inline-block;
-
   border:1px solid #ffffff22;
-
   padding:4px 8px;
-
   border-radius:99px;
-
   font-size:10px;
 }
 
 .empty{
   padding:30px;
-
   text-align:center;
-
   color:#9db8c8;
-
   border:1px dashed #ffffff24;
-
   border-radius:15px;
 }
 
 .tiny{
   font-size:10px;
   color:#8eabbc;
-
   margin-top:10px;
-
   text-align:center;
 }
 
-/* =========================
-   ACCOUNT MENU
-========================= */
+/* =========================================
+   PROFILE
+========================================= */
 
-.account-card{
+.profile-preview{
   display:flex;
+  flex-direction:column;
   align-items:center;
-  gap:14px;
-
-  padding:15px;
-
-  border:1px solid #ffffff1f;
-  border-radius:15px;
-
-  background:#ffffff08;
-
-  margin:15px 0;
+  padding:8px 0 18px;
 }
 
-.avatar{
-  width:58px;
-  height:58px;
-
+.profile-avatar-large{
+  width:110px;
+  height:110px;
   border-radius:50%;
-
+  overflow:hidden;
   display:grid;
   place-items:center;
-
-  overflow:hidden;
-
-  flex-shrink:0;
-
-  background:
-    linear-gradient(
-      135deg,
-      #73f2ff,
-      #67f5bd
-    );
-
+  background:linear-gradient(
+    135deg,
+    #7af4c0,
+    #72dcff
+  );
   color:#052039;
-
-  font-size:22px;
+  font-size:38px;
   font-weight:1000;
+  border:3px solid #ffffff35;
+  box-shadow:0 15px 45px #0006;
 }
 
-.avatar img{
+.profile-avatar-large img{
   width:100%;
   height:100%;
   object-fit:cover;
 }
 
-.account-info{
-  min-width:0;
-}
-
-.account-name{
-  font-size:17px;
-  font-weight:950;
-
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.account-email{
-  font-size:11px;
-  color:#9eb8c7;
-
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-
-.menu-list{
-  display:grid;
+.avatar-actions{
+  display:flex;
   gap:8px;
-  margin-top:15px;
+  margin-top:13px;
+  flex-wrap:wrap;
+  justify-content:center;
 }
 
-.menu-item{
-  width:100%;
-
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-
-  padding:14px;
-
-  border:1px solid #ffffff1e;
-
-  border-radius:12px;
-
-  background:#ffffff08;
-
+.small-btn{
+  border:1px solid #ffffff25;
+  background:#ffffff0b;
   color:#fff;
-
+  padding:9px 12px;
+  border-radius:9px;
   cursor:pointer;
-
-  text-align:left;
-
-  transition:.2s;
+  font-size:11px;
+  font-weight:800;
 }
 
-.menu-item:hover{
-  background:#ffffff12;
-  border-color:#ffffff35;
+.small-btn:hover{
+  background:#ffffff15;
 }
 
-.menu-left{
-  display:flex;
-  align-items:center;
-  gap:11px;
+.small-btn.danger{
+  color:#ff9aaa;
 }
 
-.menu-icon{
-  width:34px;
-  height:34px;
-
-  display:grid;
-  place-items:center;
-
-  border-radius:10px;
-
-  background:#ffffff0d;
-}
-
-.menu-arrow{
-  color:#8faaba;
-}
-
-.logout{
-  color:#ff9eac;
-  border-color:#ff8e9e25;
-}
-
-.logout:hover{
-  background:#ff8e9e10;
-}
-
-/* =========================
+/* =========================================
    SETTINGS
-========================= */
+========================================= */
 
 .setting-row{
   display:flex;
-
-  align-items:center;
   justify-content:space-between;
-
+  align-items:center;
   gap:15px;
-
-  padding:15px 0;
-
-  border-bottom:1px solid #ffffff12;
+  padding:14px 0;
+  border-bottom:1px solid #ffffff13;
 }
 
 .setting-row:last-child{
   border-bottom:0;
 }
 
-.setting-title{
-  font-size:14px;
-  font-weight:850;
+.setting-info{
+  min-width:0;
 }
 
-.setting-desc{
+.setting-info b{
+  display:block;
+  font-size:13px;
+  margin-bottom:4px;
+}
+
+.setting-info span{
+  color:#9db8c8;
   font-size:11px;
-  color:#91adbd;
-
-  margin-top:4px;
-  line-height:1.5;
+  line-height:1.4;
 }
-
-/* Toggle */
 
 .switch{
   position:relative;
-
-  width:52px;
-  height:30px;
-
-  flex-shrink:0;
+  width:50px;
+  height:28px;
+  flex:none;
 }
 
 .switch input{
-  display:none;
+  opacity:0;
+  width:0;
+  height:0;
 }
 
 .slider{
   position:absolute;
   inset:0;
-
-  background:#173044;
-
   border-radius:99px;
-
+  background:#263b4b;
   cursor:pointer;
-
-  transition:.3s;
+  transition:.25s;
 }
 
 .slider:before{
   content:"";
-
   position:absolute;
-
   width:22px;
   height:22px;
-
-  left:4px;
-  top:4px;
-
+  left:3px;
+  top:3px;
   border-radius:50%;
-
-  background:#d8f7ff;
-
-  transition:.3s;
+  background:white;
+  transition:.25s;
 }
 
 .switch input:checked + .slider{
-  background:#48dcb1;
+  background:#4ddcae;
 }
 
 .switch input:checked + .slider:before{
   transform:translateX(22px);
-  background:#fff;
 }
 
-/* =========================
-   PROFILE
-========================= */
+.language-select{
+  background:#03101b;
+  color:#fff;
+  border:1px solid #ffffff25;
+  padding:9px 10px;
+  border-radius:9px;
+  outline:none;
+  cursor:pointer;
+  flex:none;
+}
 
-.profile-preview{
+/* =========================================
+   COUNTRY
+========================================= */
+
+.country-box{
   display:flex;
-  flex-direction:column;
   align-items:center;
-
-  padding:10px 0 20px;
+  gap:12px;
+  padding:12px;
+  margin:14px 0;
+  border-radius:12px;
+  border:1px solid #ffffff20;
+  background:#ffffff08;
 }
 
-.profile-big{
-  width:90px;
-  height:90px;
-
-  border-radius:50%;
-
+.country-icon{
+  width:40px;
+  height:40px;
+  border-radius:10px;
   display:grid;
   place-items:center;
-
-  overflow:hidden;
-
-  background:
-    linear-gradient(
-      135deg,
-      #73f2ff,
-      #67f5bd
-    );
-
-  color:#052039;
-
-  font-size:32px;
-  font-weight:1000;
-
-  margin-bottom:10px;
-
-  border:3px solid #ffffff20;
+  background:#ffffff0b;
+  font-size:20px;
 }
 
-.profile-big img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
+.country-box b{
+  display:block;
+  font-size:12px;
 }
 
-/* =========================
+.country-box small{
+  display:block;
+  margin-top:3px;
+  color:#8fdfff;
+  font-size:11px;
+}
+
+/* =========================================
+   TOAST
+========================================= */
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:22px;
+  transform:translate(-50%,20px);
+  opacity:0;
+  pointer-events:none;
+  z-index:100;
+  background:#061522f2;
+  border:1px solid #ffffff25;
+  color:#fff;
+  padding:12px 16px;
+  border-radius:12px;
+  box-shadow:0 15px 45px #0008;
+  font-size:12px;
+  transition:.25s;
+  max-width:90%;
+  text-align:center;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+/* =========================================
    MOBILE
-========================= */
+========================================= */
 
 @media(max-width:780px){
 
@@ -1485,11 +1412,13 @@ footer{
     display:none;
   }
 
+  .head-actions > button:not(.login){
+    display:none;
+  }
+
   .hero{
     grid-template-columns:1fr;
-
     min-height:auto;
-
     padding:52px 0 35px;
   }
 
@@ -1526,6 +1455,19 @@ footer{
     top:3%;
     transform:scale(.7);
   }
+
+  .account-menu{
+    right:-4px;
+    width:250px;
+  }
+
+  .setting-row{
+    align-items:flex-start;
+  }
+
+  .language-select{
+    max-width:150px;
+  }
 }
 </style>
 </head>
@@ -1533,12 +1475,16 @@ footer{
 <body>
 
 <div class="sky">
+
   <div class="sun"></div>
+
   <div class="cloud c1"></div>
   <div class="cloud c2"></div>
   <div class="cloud c3"></div>
   <div class="cloud c4"></div>
+
   <div class="mist"></div>
+
 </div>
 
 <div class="app">
@@ -1551,19 +1497,98 @@ footer{
   </div>
 
   <div class="nav">
-    <span onclick="goShop()">Cloud Phone</span>
-    <span onclick="goShop()">Redeem Code</span>
-    <span onclick="showInfo()">Pusat Bantuan</span>
+
+    <span onclick="goShop()">
+      Cloud Phone
+    </span>
+
+    <span onclick="goShop()">
+      Redeem Code
+    </span>
+
+    <span onclick="showInfo()">
+      Pusat Bantuan
+    </span>
+
   </div>
 
   <div class="head-actions">
 
-    <button
-      onclick="handleAccountButton()"
-      class="login"
-      id="accountBtn">
-      Masuk / Daftar
-    </button>
+    <div class="account-wrap">
+
+      <button
+        class="login"
+        id="accountBtn"
+        onclick="toggleAccountMenu()"
+      >
+        Masuk / Daftar
+      </button>
+
+      <div
+        class="account-menu"
+        id="accountMenu"
+      >
+
+        <div class="account-user">
+
+          <div
+            class="avatar"
+            id="menuAvatar"
+          >
+            ☁
+          </div>
+
+          <div class="account-info">
+
+            <div
+              class="account-name"
+              id="menuName"
+            >
+              Akun saya
+            </div>
+
+            <div
+              class="account-email"
+              id="menuEmail"
+            >
+              -
+            </div>
+
+          </div>
+
+        </div>
+
+        <button
+          class="account-item"
+          onclick="openProfile()"
+        >
+          👤 Profil
+        </button>
+
+        <button
+          class="account-item"
+          onclick="openSettings()"
+        >
+          ⚙️ Pengaturan
+        </button>
+
+        <button
+          class="account-item"
+          onclick="openOrders()"
+        >
+          🧾 Pesanan saya
+        </button>
+
+        <button
+          class="account-item danger"
+          onclick="logout()"
+        >
+          🚪 Keluar
+        </button>
+
+      </div>
+
+    </div>
 
     <button onclick="openOrders()">
       Pesanan
@@ -1572,6 +1597,7 @@ footer{
   </div>
 
 </header>
+
 
 <main>
 
@@ -1589,28 +1615,44 @@ footer{
     </h1>
 
     <p>
-      Tempat beli Redeem Code cloud phone dengan tampilan ringan,
-      checkout aman, dan riwayat pesanan yang tersimpan di akun.
+      Tempat beli Redeem Code cloud phone
+      dengan tampilan ringan, checkout aman,
+      dan riwayat pesanan yang tersimpan di akun.
     </p>
 
     <div class="pills">
-      <span class="pill">☁️ Tema awan</span>
-      <span class="pill">⚡ Kode digital</span>
-      <span class="pill">🔐 Checkout Midtrans</span>
-      <span class="pill">🧾 Riwayat order</span>
+
+      <span class="pill">
+        ☁️ Tema awan
+      </span>
+
+      <span class="pill">
+        ⚡ Kode digital
+      </span>
+
+      <span class="pill">
+        🔐 Checkout Midtrans
+      </span>
+
+      <span class="pill">
+        🧾 Riwayat order
+      </span>
+
     </div>
 
     <div class="hero-actions">
 
       <button
         class="cta"
-        onclick="goShop()">
+        onclick="goShop()"
+      >
         Lihat layanan ☁️
       </button>
 
       <button
         class="ghost"
-        onclick="openAuth('register')">
+        onclick="openAuth('register')"
+      >
         Buat akun gratis
       </button>
 
@@ -1618,23 +1660,30 @@ footer{
 
   </div>
 
+
   <div class="hero-art">
 
     <div class="mini-cloud"></div>
+
     <div class="ring"></div>
+
     <div class="phone"></div>
 
   </div>
 
 </section>
 
+
 <section
   id="shop"
-  class="glass shop-wrap">
+  class="glass shop-wrap"
+>
 
   <div class="section-head">
 
-    <h2>Pilih layanan</h2>
+    <h2>
+      Pilih layanan
+    </h2>
 
     <small id="countLabel">
       Memuat...
@@ -1644,12 +1693,13 @@ footer{
 
   <div
     class="tabs"
-    id="tabs">
-  </div>
+    id="tabs"
+  ></div>
 
   <div
     class="products"
-    id="products">
+    id="products"
+  >
 
     <div class="empty">
       Memuat katalog...
@@ -1659,33 +1709,50 @@ footer{
 
 </section>
 
+
 <div class="features">
 
   <div class="feature">
-    <b>☁️ Durasi fleksibel</b>
+
+    <b>
+      ☁️ Durasi fleksibel
+    </b>
+
     <span>
-      Durasi yang muncul berasal dari produk aktif
-      di database toko.
+      Durasi yang muncul berasal dari
+      produk aktif di database toko.
     </span>
+
   </div>
 
   <div class="feature">
-    <b>🧾 Order tersimpan</b>
+
+    <b>
+      🧾 Order tersimpan
+    </b>
+
     <span>
-      Pesanan dan Redeem Code yang sudah dibayar
-      dapat dilihat kembali dari akun.
+      Pesanan dan Redeem Code yang sudah
+      dibayar dapat dilihat kembali dari akun.
     </span>
+
   </div>
 
   <div class="feature">
-    <b>🛡️ Pembayaran terverifikasi</b>
+
+    <b>
+      🛡️ Pembayaran terverifikasi
+    </b>
+
     <span>
-      Kode diberikan setelah server memverifikasi
-      status pembayaran.
+      Kode diberikan setelah server
+      memverifikasi status pembayaran.
     </span>
+
   </div>
 
 </div>
+
 
 <footer>
 
@@ -1706,227 +1773,1625 @@ footer{
 
 </main>
 
+
 <div
   class="overlay"
-  id="overlay">
+  id="overlay"
+>
 
   <div
     class="modal"
-    id="modal">
-  </div>
+    id="modal"
+  ></div>
 
 </div>
 
+
+<div
+  class="toast"
+  id="toast"
+></div>
+
 </div>
 
-<script
-  src="/api/config"
-  type="application/json"
-  id="configData">
-</script>
 
 <script>
 
-/* =========================================================
-   CONFIG
-========================================================= */
+"use strict";
+
+/* =========================================
+   STATE
+========================================= */
 
 let cfg = {
-  clientKey:'',
+  clientKey:"",
   production:false
 };
 
 let products = [];
-let active = 'all';
+let active = "all";
 let chosen = {};
 let selected = null;
-
-let user = null;
 let orders = [];
+let snapPromise = null;
 
-const tokenKey = 'tc_token';
+let detectedCountry = {
+  code:"",
+  name:"Tidak diketahui"
+};
 
-const profileKey = 'tc_profile';
+const tokenKey = "tc_token";
+const userEmailKey = "tc_user_email";
+const profileNameKey = "tc_profile_name";
+const profileImageKey = "tc_profile_image";
+const themeKey = "tc_theme";
+const languageKey = "tc_language";
 
-const themeKey = 'tc_theme';
+let currentLanguage =
+  localStorage.getItem(languageKey) || "id";
 
-/* =========================================================
-   CONFIG LOAD
-========================================================= */
 
-try{
-
-  const configElement =
-    document.getElementById('configData');
-
-  if(configElement){
-
-    const parsed =
-      JSON.parse(configElement.textContent || '{}');
-
-    cfg = {
-      ...cfg,
-      ...parsed
-    };
-
-  }
-
-}catch(e){
-
-  console.warn(
-    'Config tidak dapat dibaca:',
-    e
-  );
-
-}
-
-/* =========================================================
-   TOKEN
-========================================================= */
+const $ = id =>
+  document.getElementById(id);
 
 const token = () =>
   localStorage.getItem(tokenKey);
 
-/* =========================================================
+
+/* =========================================
+   TRANSLATIONS
+========================================= */
+
+const translations = {
+
+  id:{
+    profile:"Profil",
+    settings:"Pengaturan",
+    orders:"Pesanan saya",
+    logout:"Keluar",
+    language:"Bahasa",
+    languageDesc:"Pilih bahasa tampilan website.",
+    night:"Mode malam",
+    nightDesc:"Ubah tampilan menjadi suasana malam.",
+    editProfile:"Edit profil",
+    editProfileDesc:"Ganti nama dan foto profil.",
+    reset:"Reset",
+    close:"Tutup"
+  },
+
+  en:{
+    profile:"Profile",
+    settings:"Settings",
+    orders:"My Orders",
+    logout:"Logout",
+    language:"Language",
+    languageDesc:"Choose the website language.",
+    night:"Night mode",
+    nightDesc:"Change the website to night mode.",
+    editProfile:"Edit profile",
+    editProfileDesc:"Change your name and profile image.",
+    reset:"Reset",
+    close:"Close"
+  }
+
+};
+
+let T =
+  translations[currentLanguage];
+
+
+/* =========================================
+   TOAST
+========================================= */
+
+let toastTimer = null;
+
+function toast(message){
+
+  const el = $("toast");
+
+  if(!el) return;
+
+  el.textContent = message;
+
+  el.classList.add("show");
+
+  clearTimeout(toastTimer);
+
+  toastTimer =
+    setTimeout(() => {
+
+      el.classList.remove("show");
+
+    },3000);
+}
+
+
+/* =========================================
+   ESCAPE HTML
+========================================= */
+
+function escapeHTML(value){
+
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+
+/* =========================================
    API
-========================================================= */
+========================================= */
 
-const api = async(path,opt={}) => {
+async function api(path,opt={}){
 
-  opt.headers = {
-    ...(opt.headers || {}),
-    'Content-Type':'application/json'
+  const options = {
+    ...opt,
+
+    headers:{
+      ...(opt.headers || {}),
+      "Content-Type":"application/json"
+    }
   };
 
   if(token()){
 
-    opt.headers.Authorization =
-      'Bearer ' + token();
+    options.headers.Authorization =
+      "Bearer " + token();
 
   }
 
-  const r =
-    await fetch(path,opt);
+  const response =
+    await fetch(path,options);
 
-  let d = {};
+  let data = {};
 
   try{
 
-    d = await r.json();
+    data =
+      await response.json();
 
-  }catch(e){
+  }catch{
 
-    d = {};
+    data = {};
 
   }
 
-  if(!r.ok){
+  if(!response.ok){
+
+    if(
+      response.status === 401 ||
+      response.status === 403
+    ){
+
+      throw new Error(
+        data.error ||
+        "Sesi login sudah tidak valid."
+      );
+
+    }
 
     throw new Error(
-      d.error ||
-      'Terjadi kesalahan'
+      data.error ||
+      data.message ||
+      "Terjadi kesalahan server."
     );
 
   }
 
-  return d;
-};
+  return data;
+}
 
-/* =========================================================
-   RUPIAH
-========================================================= */
+
+/* =========================================
+   FORMAT
+========================================= */
 
 function rupiah(n){
 
   return new Intl.NumberFormat(
-    'id-ID',
+    "id-ID",
     {
-      style:'currency',
-      currency:'IDR',
+      style:"currency",
+      currency:"IDR",
       maximumFractionDigits:0
     }
-  ).format(n);
+  ).format(Number(n) || 0);
 
 }
 
-/* =========================================================
-   MODAL
-========================================================= */
-
-function showModal(html){
-
-  document.getElementById(
-    'modal'
-  ).innerHTML = html;
-
-  document.getElementById(
-    'overlay'
-  ).style.display = 'flex';
-
-}
-
-function closeModal(){
-
-  document.getElementById(
-    'overlay'
-  ).style.display = 'none';
-
-}
-
-/* =========================================================
-   PROVIDER
-========================================================= */
 
 function providerName(x){
 
-  return {
+  const names = {
 
-    redfinger:'Redfinger',
+    redfinger:"Redfinger",
 
-    ugcloud:'UgCloud / UgPhone',
+    ugcloud:"UgCloud / UgPhone",
 
-    genplay:'GenPlay',
+    genplay:"GenPlay",
 
-    other:'Lainnya'
+    other:"Lainnya"
 
-  }[x] || x;
+  };
+
+  return names[x] ||
+    String(x || "Provider");
+}
+
+
+/* =========================================
+   MODAL
+========================================= */
+
+function showModal(html){
+
+  $("modal").innerHTML =
+    html;
+
+  $("overlay")
+    .classList.add("show");
+}
+
+
+function closeModal(){
+
+  $("overlay")
+    .classList.remove("show");
 
 }
 
-/* =========================================================
-   PRODUCTS
-========================================================= */
 
-function groupProducts(){
+/* =========================================
+   THEME
+========================================= */
 
-  const m = new Map();
+function applyTheme(theme){
 
-  for(const p of products){
+  if(theme === "night"){
 
-    const k =
-      p.provider + '|' + p.name;
+    document.body
+      .classList.add("night");
 
-    if(!m.has(k)){
+  }else{
 
-      m.set(k,{
-        provider:p.provider,
-        name:p.name,
-        rows:[]
-      });
-
-    }
-
-    m.get(k).rows.push(p);
+    document.body
+      .classList.remove("night");
 
   }
 
-  return [...m.values()];
+  localStorage.setItem(
+    themeKey,
+    theme
+  );
+}
+
+
+function loadTheme(){
+
+  const theme =
+    localStorage.getItem(themeKey) ||
+    "day";
+
+  applyTheme(theme);
+}
+
+
+function toggleNightMode(enabled){
+
+  applyTheme(
+    enabled
+      ? "night"
+      : "day"
+  );
+
+  toast(
+    enabled
+      ? "🌙 Mode malam aktif"
+      : "☀️ Mode siang aktif"
+  );
+}
+
+
+/* =========================================
+   LANGUAGE
+========================================= */
+
+function setLanguage(lang){
+
+  if(
+    lang !== "id" &&
+    lang !== "en"
+  ){
+
+    lang = "id";
+
+  }
+
+  currentLanguage = lang;
+
+  T =
+    translations[currentLanguage];
+
+  localStorage.setItem(
+    languageKey,
+    currentLanguage
+  );
+
+  updateAccountUI();
+
+  toast(
+    currentLanguage === "id"
+      ? "🇮🇩 Bahasa Indonesia dipilih."
+      : "🇬🇧 English selected."
+  );
+}
+
+
+/* =========================================
+   PROFILE STORAGE
+========================================= */
+
+function getProfileName(){
+
+  return localStorage.getItem(
+    profileNameKey
+  ) || "";
 
 }
 
-/* =========================================================
-   RENDER
-========================================================= */
+
+function getProfileImage(){
+
+  return localStorage.getItem(
+    profileImageKey
+  ) || "";
+
+}
+
+
+function getDisplayName(){
+
+  const name =
+    getProfileName().trim();
+
+  if(name){
+
+    return name;
+
+  }
+
+  const email =
+    localStorage.getItem(
+      userEmailKey
+    ) || "";
+
+  if(email.includes("@")){
+
+    return email.split("@")[0];
+
+  }
+
+  return "Akun saya";
+}
+
+
+function initials(name){
+
+  const clean =
+    String(name || "TC")
+      .trim()
+      .split(/\s+/)
+      .slice(0,2);
+
+  return clean
+    .map(x => x[0])
+    .join("")
+    .toUpperCase();
+}
+
+
+/* =========================================
+   ACCOUNT UI
+========================================= */
+
+function updateAccountUI(){
+
+  const loggedIn =
+    !!token();
+
+  const accountBtn =
+    $("accountBtn");
+
+  const menuName =
+    $("menuName");
+
+  const menuEmail =
+    $("menuEmail");
+
+  const menuAvatar =
+    $("menuAvatar");
+
+  if(!loggedIn){
+
+    accountBtn.textContent =
+      currentLanguage === "en"
+        ? "Login / Sign up"
+        : "Masuk / Daftar";
+
+    menuName.textContent =
+      currentLanguage === "en"
+        ? "My account"
+        : "Akun saya";
+
+    menuEmail.textContent =
+      "-";
+
+    menuAvatar.innerHTML =
+      "☁";
+
+    return;
+  }
+
+  const email =
+    localStorage.getItem(
+      userEmailKey
+    ) || "";
+
+  const name =
+    getDisplayName();
+
+  const image =
+    getProfileImage();
+
+  accountBtn.textContent =
+    currentLanguage === "en"
+      ? "My account"
+      : "Akun saya";
+
+  menuName.textContent =
+    name;
+
+  menuEmail.textContent =
+    email ||
+    (
+      currentLanguage === "en"
+        ? "Login active"
+        : "Login aktif"
+    );
+
+  if(image){
+
+    menuAvatar.innerHTML =
+      `<img
+        src="${escapeHTML(image)}"
+        alt="Foto profil"
+      >`;
+
+  }else{
+
+    menuAvatar.textContent =
+      initials(name);
+
+  }
+
+}
+
+
+/* =========================================
+   ACCOUNT MENU
+========================================= */
+
+function toggleAccountMenu(){
+
+  if(!token()){
+
+    openAuth("login");
+
+    return;
+
+  }
+
+  $("accountMenu")
+    .classList.toggle("show");
+
+}
+
+
+function closeAccountMenu(){
+
+  $("accountMenu")
+    .classList.remove("show");
+
+}
+
+
+/* =========================================
+   PROFILE
+========================================= */
+
+function openProfile(){
+
+  if(!token()){
+
+    openAuth("login");
+
+    return;
+
+  }
+
+  closeAccountMenu();
+
+  const name =
+    getDisplayName();
+
+  const image =
+    getProfileImage();
+
+  showModal(`
+
+    <div class="modal-head">
+
+      <h3>
+        ${T.profile} 👤
+      </h3>
+
+      <button
+        class="x"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <div class="profile-preview">
+
+      <div
+        class="profile-avatar-large"
+        id="profilePreview"
+      >
+
+        ${
+          image
+            ? `
+              <img
+                src="${escapeHTML(image)}"
+                alt="Foto profil"
+              >
+            `
+            : escapeHTML(
+                initials(name)
+              )
+        }
+
+      </div>
+
+      <div class="avatar-actions">
+
+        <button
+          class="small-btn"
+          onclick="chooseProfileImage()"
+        >
+          🖼️ Customize Image
+        </button>
+
+        <button
+          class="small-btn danger"
+          onclick="removeProfileImage()"
+        >
+          🗑️ Hapus
+        </button>
+
+      </div>
+
+      <input
+        type="file"
+        id="profileImageInput"
+        accept="image/*"
+        hidden
+        onchange="handleProfileImage(event)"
+      >
+
+    </div>
+
+    <div class="field">
+
+      <label>
+        ${currentLanguage === "en"
+          ? "Profile name"
+          : "Nama profil"}
+      </label>
+
+      <input
+        id="profileNameInput"
+        type="text"
+        maxlength="40"
+        value="${escapeHTML(
+          getProfileName()
+        )}"
+        placeholder="${
+          currentLanguage === "en"
+            ? "Enter your name"
+            : "Masukkan nama kamu"
+        }"
+      >
+
+    </div>
+
+    <div class="field">
+
+      <label>
+        Email akun
+      </label>
+
+      <input
+        type="email"
+        value="${escapeHTML(
+          localStorage.getItem(
+            userEmailKey
+          ) || ""
+        )}"
+        disabled
+      >
+
+    </div>
+
+    <div class="note">
+
+      🖼️ ${
+        currentLanguage === "en"
+          ? "Your profile image is stored locally on this device."
+          : "Foto profil disimpan secara lokal di perangkat ini."
+      }
+
+    </div>
+
+    <button
+      class="primary"
+      onclick="saveProfile()"
+    >
+      ${
+        currentLanguage === "en"
+          ? "Save changes"
+          : "Simpan perubahan"
+      }
+    </button>
+
+    <button
+      class="secondary"
+      onclick="closeModal()"
+    >
+      ${T.close}
+    </button>
+
+  `);
+}
+
+
+/* =========================================
+   PROFILE IMAGE
+========================================= */
+
+function chooseProfileImage(){
+
+  const input =
+    $("profileImageInput");
+
+  if(input){
+
+    input.click();
+
+  }
+
+}
+
+
+function handleProfileImage(event){
+
+  const file =
+    event.target.files?.[0];
+
+  if(!file){
+
+    return;
+
+  }
+
+  if(!file.type.startsWith("image/")){
+
+    toast(
+      "File harus berupa gambar."
+    );
+
+    return;
+
+  }
+
+  if(file.size > 5 * 1024 * 1024){
+
+    toast(
+      "Ukuran gambar maksimal 5 MB."
+    );
+
+    return;
+
+  }
+
+  const reader =
+    new FileReader();
+
+  reader.onload = function(){
+
+    const result =
+      reader.result;
+
+    localStorage.setItem(
+      profileImageKey,
+      result
+    );
+
+    const preview =
+      $("profilePreview");
+
+    if(preview){
+
+      preview.innerHTML =
+        `<img
+          src="${result}"
+          alt="Foto profil"
+        >`;
+
+    }
+
+    updateAccountUI();
+
+    toast(
+      "🖼️ Foto profil berhasil diganti."
+    );
+
+  };
+
+  reader.readAsDataURL(file);
+}
+
+
+function removeProfileImage(){
+
+  localStorage.removeItem(
+    profileImageKey
+  );
+
+  const preview =
+    $("profilePreview");
+
+  if(preview){
+
+    preview.innerHTML =
+      escapeHTML(
+        initials(
+          getDisplayName()
+        )
+      );
+
+  }
+
+  updateAccountUI();
+
+  toast(
+    "Foto profil dihapus."
+  );
+}
+
+
+/* =========================================
+   SAVE PROFILE
+========================================= */
+
+function saveProfile(){
+
+  const input =
+    $("profileNameInput");
+
+  const name =
+    input?.value.trim() || "";
+
+  if(name.length > 40){
+
+    toast(
+      "Nama profil terlalu panjang."
+    );
+
+    return;
+
+  }
+
+  if(name){
+
+    localStorage.setItem(
+      profileNameKey,
+      name
+    );
+
+  }else{
+
+    localStorage.removeItem(
+      profileNameKey
+    );
+
+  }
+
+  updateAccountUI();
+
+  closeModal();
+
+  toast(
+    "✅ Profil berhasil diperbarui."
+  );
+}
+
+
+/* =========================================
+   SETTINGS
+========================================= */
+
+function openSettings(){
+
+  if(!token()){
+
+    openAuth("login");
+
+    return;
+
+  }
+
+  closeAccountMenu();
+
+  const night =
+    localStorage.getItem(
+      themeKey
+    ) === "night";
+
+  showModal(`
+
+    <div class="modal-head">
+
+      <h3>
+        ${T.settings} ⚙️
+      </h3>
+
+      <button
+        class="x"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <p class="sub">
+
+      ${
+        currentLanguage === "en"
+          ? "Customize Top up Clouds to your preference."
+          : "Atur tampilan Top up Clouds sesuai keinginan kamu."
+      }
+
+    </p>
+
+
+    <div class="setting-row">
+
+      <div class="setting-info">
+
+        <b>
+          🌙 ${T.night}
+        </b>
+
+        <span>
+          ${T.nightDesc}
+        </span>
+
+      </div>
+
+      <label class="switch">
+
+        <input
+          type="checkbox"
+          ${night ? "checked" : ""}
+          onchange="toggleNightMode(this.checked)"
+        >
+
+        <span class="slider"></span>
+
+      </label>
+
+    </div>
+
+
+    <div class="setting-row">
+
+      <div class="setting-info">
+
+        <b>
+          🌐 ${T.language}
+        </b>
+
+        <span>
+          ${T.languageDesc}
+        </span>
+
+      </div>
+
+      <select
+        class="language-select"
+        onchange="setLanguage(this.value);openSettings()"
+      >
+
+        <option
+          value="id"
+          ${
+            currentLanguage === "id"
+              ? "selected"
+              : ""
+          }
+        >
+          🇮🇩 Indonesia
+        </option>
+
+        <option
+          value="en"
+          ${
+            currentLanguage === "en"
+              ? "selected"
+              : ""
+          }
+        >
+          🇬🇧 English
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="setting-row">
+
+      <div class="setting-info">
+
+        <b>
+          👤 ${T.editProfile}
+        </b>
+
+        <span>
+          ${T.editProfileDesc}
+        </span>
+
+      </div>
+
+      <button
+        class="small-btn"
+        onclick="openProfile()"
+      >
+        Buka
+      </button>
+
+    </div>
+
+
+    <div class="setting-row">
+
+      <div class="setting-info">
+
+        <b>
+          🧹 Data tampilan
+        </b>
+
+        <span>
+          ${
+            currentLanguage === "en"
+              ? "Remove local name and profile image."
+              : "Menghapus nama dan foto profil lokal."
+          }
+        </span>
+
+      </div>
+
+      <button
+        class="small-btn danger"
+        onclick="clearLocalProfile()"
+      >
+        ${T.reset}
+      </button>
+
+    </div>
+
+
+    <div class="note">
+
+      ${
+        currentLanguage === "en"
+          ? "Theme, language and profile image settings are stored in this browser."
+          : "Pengaturan tema, bahasa dan foto profil disimpan di browser perangkat ini."
+      }
+
+    </div>
+
+
+    <button
+      class="secondary"
+      onclick="closeModal()"
+    >
+      ${T.close}
+    </button>
+
+  `);
+}
+
+
+function clearLocalProfile(){
+
+  localStorage.removeItem(
+    profileNameKey
+  );
+
+  localStorage.removeItem(
+    profileImageKey
+  );
+
+  updateAccountUI();
+
+  toast(
+    currentLanguage === "en"
+      ? "Profile display data reset."
+      : "Data tampilan profil telah direset."
+  );
+
+  openSettings();
+}
+
+
+/* =========================================
+   COUNTRY DETECTION
+========================================= */
+
+async function detectCountry(){
+
+  try{
+
+    const response =
+      await fetch(
+        "https://ipapi.co/json/",
+        {
+          cache:"no-store"
+        }
+      );
+
+    if(!response.ok){
+
+      throw new Error(
+        "Country detection failed"
+      );
+
+    }
+
+    const data =
+      await response.json();
+
+    detectedCountry = {
+
+      code:
+        data.country_code || "",
+
+      name:
+        data.country_name ||
+        "Tidak diketahui"
+
+    };
+
+  }catch{
+
+    detectedCountry = {
+
+      code:"",
+      name:
+        currentLanguage === "en"
+          ? "Could not detect"
+          : "Tidak dapat dideteksi"
+
+    };
+
+  }
+
+  return detectedCountry;
+}
+
+
+/* =========================================
+   AUTH
+========================================= */
+
+function socialLogin(provider){
+
+  showModal(`
+
+    <div class="modal-head">
+
+      <h3>
+        ${escapeHTML(provider)} Login
+      </h3>
+
+      <button
+        class="x"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+    <p class="sub">
+
+      Tombol ${escapeHTML(provider)}
+      sudah disiapkan di desain Top up Clouds.
+
+    </p>
+
+    <div class="note">
+
+      Login ${escapeHTML(provider)}
+      belum aktif karena OAuth production
+      membutuhkan konfigurasi aplikasi resmi,
+      Client ID/Secret, redirect URL, dan
+      pengaturan di provider tersebut.
+
+      Kita tidak akan membuat login palsu.
+
+    </div>
+
+    <button
+      class="primary"
+      onclick="closeModal()"
+    >
+      Kembali
+    </button>
+
+  `);
+}
+
+
+async function openAuth(mode){
+
+  closeAccountMenu();
+
+  await detectCountry();
+
+  showModal(`
+
+    <div class="modal-head">
+
+      <h3>
+
+        ${
+          mode === "login"
+            ? (
+                currentLanguage === "en"
+                  ? "Welcome ☁️"
+                  : "Selamat datang ☁️"
+              )
+            : (
+                currentLanguage === "en"
+                  ? "Create Top up Clouds account"
+                  : "Buat akun Top up Clouds"
+              )
+        }
+
+      </h3>
+
+      <button
+        class="x"
+        onclick="closeModal()"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <div class="country-box">
+
+      <span class="country-icon">
+        🌍
+      </span>
+
+      <div>
+
+        <b>
+          ${
+            currentLanguage === "en"
+              ? "Detected country"
+              : "Negara terdeteksi"
+          }
+        </b>
+
+        <small>
+
+          ${
+            escapeHTML(
+              detectedCountry.name
+            )
+          }
+
+        </small>
+
+      </div>
+
+    </div>
+
+
+    <p class="tiny">
+
+      ${
+        currentLanguage === "en"
+          ? "Country is estimated from network/IP and does not use GPS."
+          : "Negara diperkirakan berdasarkan jaringan/IP dan bukan lokasi GPS."
+      }
+
+    </p>
+
+
+    <p class="sub">
+
+      ${
+        mode === "login"
+          ? (
+              currentLanguage === "en"
+                ? "Login to view your orders and redeem codes."
+                : "Masuk untuk melihat pesanan dan Redeem Code."
+            )
+          : (
+              currentLanguage === "en"
+                ? "Create an account to save your orders and Redeem Codes."
+                : "Daftar untuk menyimpan pesanan dan Redeem Code di akun."
+            )
+      }
+
+    </p>
+
+
+    <div class="social-title">
+      ${
+        currentLanguage === "en"
+          ? "Quick login with"
+          : "Login cepat dengan"
+      }
+    </div>
+
+
+    <div class="social-grid">
+
+      <button
+        class="social"
+        onclick="socialLogin('Google')"
+      >
+        <span class="ico">G</span>
+        Google
+      </button>
+
+      <button
+        class="social"
+        onclick="socialLogin('Facebook')"
+      >
+        <span class="ico">f</span>
+        Facebook
+      </button>
+
+      <button
+        class="social"
+        onclick="socialLogin('X')"
+      >
+        <span class="ico">𝕏</span>
+        X
+      </button>
+
+      <button
+        class="social"
+        onclick="socialLogin('Apple')"
+      >
+        <span class="ico">●</span>
+        Apple
+      </button>
+
+    </div>
+
+
+    <div class="tiny">
+
+      ${
+        currentLanguage === "en"
+          ? "Social login will be enabled after official OAuth configuration."
+          : "Login sosial akan diaktifkan setelah OAuth resmi dikonfigurasi."
+      }
+
+    </div>
+
+
+    <div class="social-title">
+
+      ${
+        currentLanguage === "en"
+          ? "or email & password"
+          : "atau email & password"
+      }
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Email
+      </label>
+
+      <input
+        id="authEmail"
+        type="email"
+        autocomplete="email"
+        placeholder="nama@email.com"
+      >
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Password
+      </label>
+
+      <input
+        id="authPass"
+        type="password"
+        autocomplete="${
+          mode === "login"
+            ? "current-password"
+            : "new-password"
+        }"
+        placeholder="${
+          currentLanguage === "en"
+            ? "Minimum 8 characters"
+            : "Minimal 8 karakter"
+        }"
+      >
+
+    </div>
+
+
+    <button
+      class="primary"
+      onclick="authSubmit('${mode}')"
+    >
+
+      ${
+        mode === "login"
+          ? (
+              currentLanguage === "en"
+                ? "Login"
+                : "Masuk"
+            )
+          : (
+              currentLanguage === "en"
+                ? "Sign up"
+                : "Daftar"
+            )
+      }
+
+    </button>
+
+
+    <p class="sub auth-switch">
+
+      ${
+        mode === "login"
+          ? (
+              currentLanguage === "en"
+                ? "Don't have an account?"
+                : "Belum punya akun?"
+            )
+          : (
+              currentLanguage === "en"
+                ? "Already have an account?"
+                : "Sudah punya akun?"
+            )
+      }
+
+      <span
+        class="mutelink"
+        onclick="openAuth('${
+          mode === "login"
+            ? "register"
+            : "login"
+        }')"
+      >
+
+        ${
+          mode === "login"
+            ? (
+                currentLanguage === "en"
+                  ? "Sign up"
+                  : "Daftar"
+              )
+            : (
+                currentLanguage === "en"
+                  ? "Login"
+                  : "Masuk"
+              )
+        }
+
+      </span>
+
+    </p>
+
+  `);
+}
+
+
+async function authSubmit(mode){
+
+  const email =
+    $("authEmail")
+      ?.value
+      .trim();
+
+  const password =
+    $("authPass")
+      ?.value || "";
+
+  if(
+    !email ||
+    !email.includes("@") ||
+    password.length < 8
+  ){
+
+    toast(
+      currentLanguage === "en"
+        ? "Valid email and password of at least 8 characters are required."
+        : "Email valid dan password minimal 8 karakter wajib diisi."
+    );
+
+    return;
+  }
+
+  try{
+
+    const data =
+      await api(
+        mode === "login"
+          ? "/api/login"
+          : "/api/register",
+        {
+          method:"POST",
+
+          body:JSON.stringify({
+            email,
+            password
+          })
+        }
+      );
+
+    if(!data.token){
+
+      throw new Error(
+        currentLanguage === "en"
+          ? "Server did not return a login token."
+          : "Server tidak mengembalikan token login."
+      );
+
+    }
+
+    localStorage.setItem(
+      tokenKey,
+      data.token
+    );
+
+    localStorage.setItem(
+      userEmailKey,
+      data.email || email
+    );
+
+    updateAccountUI();
+
+    closeModal();
+
+    toast(
+      mode === "login"
+        ? (
+            currentLanguage === "en"
+              ? "✅ Login successful."
+              : "✅ Berhasil masuk."
+          )
+        : (
+            currentLanguage === "en"
+              ? "✅ Account created successfully."
+              : "✅ Akun berhasil dibuat."
+          )
+    );
+
+  }catch(error){
+
+    toast(
+      error.message
+    );
+
+  }
+}
+
+
+/* =========================================
+   LOGOUT
+========================================= */
+
+function logout(){
+
+  localStorage.removeItem(
+    tokenKey
+  );
+
+  localStorage.removeItem(
+    userEmailKey
+  );
+
+  closeAccountMenu();
+
+  updateAccountUI();
+
+  closeModal();
+
+  toast(
+    currentLanguage === "en"
+      ? "👋 You have logged out."
+      : "👋 Kamu sudah keluar dari akun."
+  );
+}
+
+
+/* =========================================
+   PRODUCTS
+========================================= */
+
+function groupProducts(){
+
+  const map =
+    new Map();
+
+  for(const p of products){
+
+    const key =
+      p.provider + "|" + p.name;
+
+    if(!map.has(key)){
+
+      map.set(
+        key,
+        {
+          provider:p.provider,
+          name:p.name,
+          rows:[]
+        }
+      );
+
+    }
+
+    map.get(key).rows.push(p);
+
+  }
+
+  return [...map.values()];
+}
+
 
 function render(){
 
@@ -1934,7 +3399,7 @@ function render(){
     groupProducts();
 
   const providers = [
-    'all',
+    "all",
     ...new Set(
       groups.map(
         g => g.provider
@@ -1942,150 +3407,211 @@ function render(){
     )
   ];
 
-  document.getElementById(
-    'tabs'
-  ).innerHTML = providers.map(
-    x => `
+  $("tabs").innerHTML =
+    providers.map(x => `
+
       <button
-        class="tab ${x===active?'active':''}"
-        onclick="setProvider('${x}')">
-        ${x==='all'
-          ? '☁️ Semua'
-          : providerName(x)}
+        class="tab ${
+          x === active
+            ? "active"
+            : ""
+        }"
+        onclick="setProvider('${escapeHTML(x)}')"
+      >
+
+        ${
+          x === "all"
+            ? "☁️ Semua"
+            : escapeHTML(
+                providerName(x)
+              )
+        }
+
       </button>
-    `
-  ).join('');
+
+    `).join("");
 
   const list =
-    active === 'all'
+    active === "all"
       ? groups
       : groups.filter(
-          g => g.provider === active
+          g =>
+            g.provider === active
         );
 
-  document.getElementById(
-    'countLabel'
-  ).textContent =
-    list.length + ' layanan';
+  $("countLabel").textContent =
+    list.length +
+    (
+      currentLanguage === "en"
+        ? " services"
+        : " layanan"
+    );
 
-  document.getElementById(
-    'products'
-  ).innerHTML =
-    list.length
+  if(!list.length){
 
-    ?
+    $("products").innerHTML = `
 
+      <div class="empty">
+
+        ${
+          currentLanguage === "en"
+            ? "No active products yet. Add products from the admin panel."
+            : "Belum ada produk aktif. Tambahkan produk dari panel admin."
+        }
+
+      </div>
+
+    `;
+
+    return;
+  }
+
+  $("products").innerHTML =
     list.map(g => {
 
       const rows =
-        g.rows.sort(
+        [...g.rows].sort(
           (a,b) =>
-            a.duration_days -
-            b.duration_days
+            Number(a.duration_days) -
+            Number(b.duration_days)
         );
 
       const key =
-        g.provider + '|' + g.name;
+        g.provider +
+        "|" +
+        g.name;
 
-      const d =
-        chosen[key] ||
-        rows[0].duration_days;
+      const chosenDays =
+        chosen[key] ??
+        Number(
+          rows[0].duration_days
+        );
 
-      const p =
+      const selectedRow =
         rows.find(
-          x => x.duration_days === d
-        ) || rows[0];
+          x =>
+            Number(x.duration_days) ===
+            Number(chosenDays)
+        ) ||
+        rows[0];
 
       return `
 
-      <article class="card">
+        <article class="card">
 
-        <div class="card-top">
+          <div class="card-top">
 
-          <div class="provider">
-            ${providerName(g.provider)}
+            <div class="provider">
+
+              ${escapeHTML(
+                providerName(
+                  g.provider
+                )
+              )}
+
+            </div>
+
+            <span class="tag">
+              REDEEM CODE
+            </span>
+
           </div>
 
-          <span class="tag">
-            REDEEM CODE
-          </span>
 
-        </div>
+          <div class="prod-title">
 
-        <div class="prod-title">
-          ${g.name}
-        </div>
+            ${escapeHTML(
+              g.name
+            )}
 
-        <div class="desc">
-          Paket aktif dan harga ditentukan
-          dari database toko.
-        </div>
+          </div>
 
-        <div class="duration-label">
-          Pilih durasi
-        </div>
 
-        <div class="durations">
+          <div class="desc">
 
-          ${rows.map(r => `
+            ${
+              currentLanguage === "en"
+                ? "Active package and pricing are determined by the store database."
+                : "Paket aktif dan harga ditentukan dari database toko."
+            }
 
-            <button
-              class="duration ${
-                r.id === p.id
-                  ? 'active'
-                  : ''
-              }"
-              onclick="
-                chooseDuration(
-                  '${key}',
-                  ${r.duration_days}
-                )
-              ">
+          </div>
 
-              ${r.duration_days}H
 
-            </button>
+          <div class="duration-label">
 
-          `).join('')}
+            ${
+              currentLanguage === "en"
+                ? "Choose duration"
+                : "Pilih durasi"
+            }
 
-        </div>
+          </div>
 
-        <div class="price">
 
-          ${p
-            ? rupiah(p.price)
-            : 'Harga belum tersedia'}
+          <div class="durations">
 
-        </div>
+            ${rows.map(r => `
 
-        <button
-          class="buy"
-          onclick="checkout(${p?.id || 0})">
+              <button
+                class="duration ${
+                  Number(r.id) ===
+                  Number(
+                    selectedRow.id
+                  )
+                    ? "active"
+                    : ""
+                }"
+                onclick="chooseDuration(
+                  '${escapeHTML(key)}',
+                  ${Number(
+                    r.duration_days
+                  )}
+                )"
+              >
 
-          Lanjutkan
+                ${Number(
+                  r.duration_days
+                )}H
 
-        </button>
+              </button>
 
-      </article>
+            `).join("")}
+
+          </div>
+
+
+          <div class="price">
+
+            ${rupiah(
+              selectedRow.price
+            )}
+
+          </div>
+
+
+          <button
+            class="buy"
+            onclick="checkout(${Number(
+              selectedRow.id
+            )})"
+          >
+
+            ${
+              currentLanguage === "en"
+                ? "Continue"
+                : "Lanjutkan"
+            }
+
+          </button>
+
+        </article>
 
       `;
 
-    }).join('')
-
-    :
-
-    `
-      <div class="empty">
-        Belum ada produk aktif.
-        Tambahkan produk dari panel admin.
-      </div>
-    `;
-
+    }).join("");
 }
 
-/* =========================================================
-   PROVIDER
-========================================================= */
 
 function setProvider(x){
 
@@ -2095,54 +3621,55 @@ function setProvider(x){
 
 }
 
-/* =========================================================
-   DURATION
-========================================================= */
 
-function chooseDuration(k,d){
+function chooseDuration(
+  key,
+  days
+){
 
-  chosen[k] = d;
+  chosen[key] =
+    Number(days);
 
   render();
 
 }
 
-/* =========================================================
+
+/* =========================================
    CHECKOUT
-========================================================= */
+========================================= */
 
 function checkout(id){
 
   selected =
     products.find(
-      p => p.id === id
+      p =>
+        Number(p.id) ===
+        Number(id)
     );
 
   if(!selected){
 
-    alert(
-      'Produk belum tersedia.'
+    toast(
+      currentLanguage === "en"
+        ? "Product is not available."
+        : "Produk belum tersedia."
     );
 
     return;
-
   }
 
   if(!token()){
 
-    openAuth('login');
+    openAuth("login");
 
     return;
-
   }
 
   renderCheckout();
 
 }
 
-/* =========================================================
-   CHECKOUT MODAL
-========================================================= */
 
 function renderCheckout(){
 
@@ -2151,23 +3678,38 @@ function renderCheckout(){
     <div class="modal-head">
 
       <h3>
-        Konfirmasi pesanan
+        ${
+          currentLanguage === "en"
+            ? "Confirm order"
+            : "Konfirmasi pesanan"
+        }
       </h3>
 
       <button
         class="x"
-        onclick="closeModal()">
+        onclick="closeModal()"
+      >
         ×
       </button>
 
     </div>
 
+
     <p class="sub">
-      ${selected.name}
+
+      ${escapeHTML(
+        selected.name
+      )}
+
       ·
-      ${selected.duration_days}
+
+      ${Number(
+        selected.duration_days
+      )}
       hari
+
     </p>
+
 
     <div class="orderline">
 
@@ -2176,12 +3718,17 @@ function renderCheckout(){
       </span>
 
       <b>
-        ${providerName(
-          selected.provider
+
+        ${escapeHTML(
+          providerName(
+            selected.provider
+          )
         )}
+
       </b>
 
     </div>
+
 
     <div class="orderline">
 
@@ -2190,58 +3737,166 @@ function renderCheckout(){
       </span>
 
       <b>
-        ${rupiah(selected.price)}
+        ${rupiah(
+          selected.price
+        )}
       </b>
 
     </div>
 
+
     <div class="note">
 
-      Metode pembayaran tersedia
-      ditampilkan langsung oleh Midtrans.
-      Jangan tutup halaman sebelum
-      memilih metode pembayaran.
+      ${
+        currentLanguage === "en"
+          ? "Available payment methods will be shown directly by Midtrans. Do not close the page before selecting a payment method."
+          : "Metode pembayaran tersedia ditampilkan langsung oleh Midtrans. Jangan tutup halaman sebelum memilih metode pembayaran."
+      }
 
     </div>
 
+
     <button
       class="primary"
-      onclick="createPayment()">
+      onclick="createPayment()"
+    >
 
-      Bayar sekarang
+      ${
+        currentLanguage === "en"
+          ? "Pay now"
+          : "Bayar sekarang"
+      }
 
     </button>
 
+
     <button
       class="secondary"
-      onclick="closeModal()">
+      onclick="closeModal()"
+    >
 
-      Batal
+      ${T.close}
 
     </button>
 
   `);
-
 }
 
-/* =========================================================
-   PAYMENT
-========================================================= */
+
+/* =========================================
+   MIDTRANS
+========================================= */
+
+async function loadSnap(){
+
+  if(window.snap){
+
+    return window.snap;
+
+  }
+
+  if(snapPromise){
+
+    return snapPromise;
+
+  }
+
+  if(!cfg.clientKey){
+
+    throw new Error(
+      currentLanguage === "en"
+        ? "Midtrans Client Key is not configured."
+        : "Client Key Midtrans belum dikonfigurasi."
+    );
+
+  }
+
+  snapPromise =
+    new Promise(
+      (resolve,reject) => {
+
+        const existing =
+          document.querySelector(
+            'script[data-topup-clouds-snap="1"]'
+          );
+
+        if(existing){
+
+          existing.addEventListener(
+            "load",
+            () => resolve(
+              window.snap
+            )
+          );
+
+          existing.addEventListener(
+            "error",
+            () =>
+              reject(
+                new Error(
+                  "Snap Midtrans gagal dimuat."
+                )
+              )
+          );
+
+          return;
+
+        }
+
+        const script =
+          document.createElement(
+            "script"
+          );
+
+        script.src =
+          cfg.production
+            ? "https://app.midtrans.com/snap/snap.js"
+            : "https://app.sandbox.midtrans.com/snap/snap.js";
+
+        script.dataset.clientKey =
+          cfg.clientKey;
+
+        script.dataset.topupCloudsSnap =
+          "1";
+
+        script.onload =
+          () =>
+            resolve(
+              window.snap
+            );
+
+        script.onerror =
+          () =>
+            reject(
+              new Error(
+                "Snap Midtrans gagal dimuat."
+              )
+            );
+
+        document.head.appendChild(
+          script
+        );
+
+      }
+    );
+
+  return snapPromise;
+}
+
 
 async function createPayment(){
 
   try{
 
-    const d =
+    const data =
       await api(
-        '/api/orders',
+        "/api/orders",
         {
-          method:'POST',
+          method:"POST",
 
           body:JSON.stringify({
             productId:selected.id
           })
-
         }
       );
 
@@ -2253,1191 +3908,141 @@ async function createPayment(){
 
     }
 
-    window.snap.pay(
-      d.token,
-      {
-
-        onSuccess:() =>
-          showPaymentResult(
-            d.orderId,
-            'Pembayaran diterima. Kode akan muncul setelah server memproses notifikasi Midtrans.'
-          ),
-
-        onPending:() =>
-          showPaymentResult(
-            d.orderId,
-            'Pembayaran masih menunggu. Cek Pesanan untuk melihat status terbaru.'
-          ),
-
-        onError:() =>
-          showPaymentResult(
-            d.orderId,
-            'Pembayaran gagal. Coba lagi atau gunakan metode pembayaran lain.'
-          ),
-
-        onClose:() =>
-          showPaymentResult(
-            d.orderId,
-            'Checkout ditutup. Jika belum membayar, order tetap berstatus pending sampai kedaluwarsa.'
-          )
-
-      }
-    );
-
-  }catch(e){
-
-    alert(e.message);
-
-  }
-
-}
-
-/* =========================================================
-   MIDTRANS
-========================================================= */
-
-async function loadSnap(){
-
-  if(!cfg.clientKey){
-
-    throw new Error(
-      'Client Key Midtrans belum tersedia.'
-    );
-
-  }
-
-  const s =
-    document.createElement('script');
-
-  s.src =
-    cfg.production
-      ? 'https://app.midtrans.com/snap/snap.js'
-      : 'https://app.sandbox.midtrans.com/snap/snap.js';
-
-  s.dataset.clientKey =
-    cfg.clientKey;
-
-  document.head.appendChild(s);
-
-  await new Promise(
-    (res,rej) => {
-
-      s.onload = res;
-
-      s.onerror = () =>
-        rej(
-          new Error(
-            'Snap Midtrans gagal dimuat'
-          )
-        );
-
-    }
-  );
-
-}
-
-/* =========================================================
-   PAYMENT RESULT
-========================================================= */
-
-function showPaymentResult(id,msg){
-
-  showModal(`
-
-    <div class="modal-head">
-
-      <h3>
-        Order ${id}
-      </h3>
-
-      <button
-        class="x"
-        onclick="closeModal()">
-        ×
-      </button>
-
-    </div>
-
-    <p class="sub">
-      ${msg}
-    </p>
-
-    <button
-      class="primary"
-      onclick="openOrders()">
-
-      Cek pesanan
-
-    </button>
-
-  `);
-
-}
-
-/* =========================================================
-   SOCIAL LOGIN
-========================================================= */
-
-function socialLogin(provider){
-
-  showModal(`
-
-    <div class="modal-head">
-
-      <h3>
-        ${provider} Login
-      </h3>
-
-      <button
-        class="x"
-        onclick="closeModal()">
-        ×
-      </button>
-
-    </div>
-
-    <p class="sub">
-
-      Tombol ${provider}
-      sudah disiapkan di desain
-      Top up Clouds.
-
-    </p>
-
-    <div class="note">
-
-      Login ${provider} belum aktif
-      karena OAuth production membutuhkan
-      konfigurasi aplikasi resmi,
-      Client ID/Secret, redirect URL,
-      dan pengaturan di provider tersebut.
-
-      Kita tidak akan membuat login palsu.
-
-    </div>
-
-    <button
-      class="primary"
-      onclick="closeModal()">
-
-      Kembali
-
-    </button>
-
-  `);
-
-}
-
-/* =========================================================
-   AUTH
-========================================================= */
-
-function openAuth(mode){
-
-  showModal(`
-
-    <div class="modal-head">
-
-      <h3>
-
-        ${
-          mode === 'login'
-            ? 'Selamat datang ☁️'
-            : 'Buat akun Top up Clouds'
-        }
-
-      </h3>
-
-      <button
-        class="x"
-        onclick="closeModal()">
-        ×
-      </button>
-
-    </div>
-
-    <p class="sub">
-
-      ${
-        mode === 'login'
-
-          ? 'Masuk untuk melihat pesanan dan Redeem Code.'
-
-          : 'Daftar untuk menyimpan pesanan dan Redeem Code di akun.'
-      }
-
-    </p>
-
-    <div class="social-title">
-      Login cepat dengan
-    </div>
-
-    <div class="social-grid">
-
-      <button
-        class="social"
-        onclick="socialLogin('Google')">
-
-        <span class="ico">G</span>
-        Google
-
-      </button>
-
-      <button
-        class="social"
-        onclick="socialLogin('Facebook')">
-
-        <span class="ico">f</span>
-        Facebook
-
-      </button>
-
-      <button
-        class="social"
-        onclick="socialLogin('X')">
-
-        <span class="ico">𝕏</span>
-        X
-
-      </button>
-
-      <button
-        class="social"
-        onclick="socialLogin('Apple')">
-
-        <span class="ico">●</span>
-        Apple
-
-      </button>
-
-    </div>
-
-    <div class="tiny">
-      Login sosial akan diaktifkan setelah OAuth resmi dikonfigurasi.
-    </div>
-
-    <div class="social-title">
-      atau email & password
-    </div>
-
-    <div class="field">
-
-      <label>
-        Email
-      </label>
-
-      <input
-        id="authEmail"
-        type="email"
-        placeholder="nama@email.com"
-        autocomplete="email">
-
-    </div>
-
-    <div class="field">
-
-      <label>
-        Password
-      </label>
-
-      <input
-        id="authPass"
-        type="password"
-        placeholder="Minimal 8 karakter"
-        autocomplete="${
-          mode === 'login'
-            ? 'current-password'
-            : 'new-password'
-        }">
-
-    </div>
-
-    <button
-      class="primary"
-      onclick="authSubmit('${mode}')">
-
-      ${
-        mode === 'login'
-          ? 'Masuk'
-          : 'Daftar'
-      }
-
-    </button>
-
-    <p class="sub auth-switch">
-
-      ${
-        mode === 'login'
-          ? 'Belum punya akun?'
-          : 'Sudah punya akun?'
-      }
-
-      <span
-        class="mutelink"
-        onclick="
-          openAuth(
-            '${mode === 'login'
-              ? 'register'
-              : 'login'}'
-          )
-        ">
-
-        ${
-          mode === 'login'
-            ? 'Daftar'
-            : 'Masuk'
-        }
-
-      </span>
-
-    </p>
-
-  `);
-
-}
-
-/* =========================================================
-   AUTH SUBMIT
-========================================================= */
-
-async function authSubmit(mode){
-
-  const email =
-    document
-      .getElementById('authEmail')
-      .value
-      .trim();
-
-  const password =
-    document
-      .getElementById('authPass')
-      .value;
-
-  if(
-    !email ||
-    password.length < 8
-  ){
-
-    alert(
-      'Email valid dan password minimal 8 karakter wajib diisi.'
-    );
-
-    return;
-
-  }
-
-  try{
-
-    const d =
-      await api(
-        mode === 'login'
-          ? '/api/login'
-          : '/api/register',
-        {
-          method:'POST',
-
-          body:JSON.stringify({
-            email,
-            password
-          })
-        }
-      );
-
-    if(!d.token){
+    if(!window.snap){
 
       throw new Error(
-        'Server tidak mengembalikan token login.'
+        "Midtrans Snap belum siap."
       );
 
     }
 
-    localStorage.setItem(
-      tokenKey,
-      d.token
+    window.snap.pay(
+      data.token,
+      {
+
+        onSuccess:() => {
+
+          showPaymentResult(
+            data.orderId,
+
+            currentLanguage === "en"
+              ? "Payment received. The code will appear after the server processes the Midtrans notification."
+              : "Pembayaran diterima. Kode akan muncul setelah server memproses notifikasi Midtrans."
+          );
+
+        },
+
+        onPending:() => {
+
+          showPaymentResult(
+            data.orderId,
+
+            currentLanguage === "en"
+              ? "Payment is still pending. Check Orders for the latest status."
+              : "Pembayaran masih menunggu. Cek Pesanan untuk melihat status terbaru."
+          );
+
+        },
+
+        onError:() => {
+
+          showPaymentResult(
+            data.orderId,
+
+            currentLanguage === "en"
+              ? "Payment failed. Try again or use another payment method."
+              : "Pembayaran gagal. Coba lagi atau gunakan metode pembayaran lain."
+          );
+
+        },
+
+        onClose:() => {
+
+          showPaymentResult(
+            data.orderId,
+
+            currentLanguage === "en"
+              ? "Checkout closed. If you have not paid, the order remains pending until it expires."
+              : "Checkout ditutup. Jika belum membayar, order tetap berstatus pending sampai kedaluwarsa."
+          );
+
+        }
+
+      }
     );
 
-    user = {
-      email:
-        d.email || email,
+  }catch(error){
 
-      name:
-        d.name ||
-        email.split('@')[0]
-    };
-
-    saveProfile();
-
-    updateAccountButton();
-
-    closeModal();
-
-    alert(
-      mode === 'login'
-        ? 'Berhasil masuk ke akun ☁️'
-        : 'Akun berhasil dibuat ☁️'
+    toast(
+      error.message
     );
 
-  }catch(e){
-
-    alert(e.message);
-
   }
-
 }
 
-/* =========================================================
-   ACCOUNT BUTTON
-========================================================= */
 
-function handleAccountButton(){
+/* =========================================
+   PAYMENT RESULT
+========================================= */
 
-  if(token()){
-
-    openAccountMenu();
-
-  }else{
-
-    openAuth('login');
-
-  }
-
-}
-
-function updateAccountButton(){
-
-  const btn =
-    document.getElementById(
-      'accountBtn'
-    );
-
-  if(!btn) return;
-
-  if(token()){
-
-    btn.textContent =
-      '👤 Akun saya';
-
-  }else{
-
-    btn.textContent =
-      'Masuk / Daftar';
-
-  }
-
-}
-
-/* =========================================================
-   PROFILE STORAGE
-========================================================= */
-
-function getProfile(){
-
-  try{
-
-    return JSON.parse(
-      localStorage.getItem(
-        profileKey
-      ) || '{}'
-    );
-
-  }catch(e){
-
-    return {};
-
-  }
-
-}
-
-function saveProfile(){
-
-  if(!user) return;
-
-  const old =
-    getProfile();
-
-  localStorage.setItem(
-    profileKey,
-    JSON.stringify({
-      ...old,
-      name:
-        user.name ||
-        old.name ||
-        '',
-      email:
-        user.email ||
-        old.email ||
-        ''
-    })
-  );
-
-}
-
-/* =========================================================
-   AVATAR
-========================================================= */
-
-function avatarHTML(size='normal'){
-
-  const profile =
-    getProfile();
-
-  const name =
-    profile.name ||
-    user?.name ||
-    user?.email ||
-    'U';
-
-  const photo =
-    profile.photo || '';
-
-  if(photo){
-
-    return `
-      <div class="${
-        size === 'big'
-          ? 'profile-big'
-          : 'avatar'
-      }">
-
-        <img
-          src="${photo}"
-          alt="Profil">
-
-      </div>
-    `;
-
-  }
-
-  return `
-    <div class="${
-      size === 'big'
-        ? 'profile-big'
-        : 'avatar'
-    }">
-
-      ${escapeHTML(
-        name
-          .charAt(0)
-          .toUpperCase()
-      )}
-
-    </div>
-  `;
-
-}
-
-/* =========================================================
-   ESCAPE HTML
-========================================================= */
-
-function escapeHTML(value){
-
-  return String(value)
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'","&#039;");
-
-}
-
-/* =========================================================
-   ACCOUNT MENU
-========================================================= */
-
-function openAccountMenu(){
-
-  if(!token()){
-
-    openAuth('login');
-    return;
-
-  }
-
-  const profile =
-    getProfile();
-
-  const email =
-    user?.email ||
-    profile.email ||
-    'Akun Top up Clouds';
-
-  const name =
-    profile.name ||
-    user?.name ||
-    email.split('@')[0];
+function showPaymentResult(
+  id,
+  message
+){
 
   showModal(`
 
     <div class="modal-head">
 
       <h3>
-        Akun saya ☁️
+        Order ${escapeHTML(id)}
       </h3>
 
       <button
         class="x"
-        onclick="closeModal()">
-        ×
-      </button>
-
-    </div>
-
-    <div class="account-card">
-
-      ${avatarHTML()}
-
-      <div class="account-info">
-
-        <div class="account-name">
-          ${escapeHTML(name)}
-        </div>
-
-        <div class="account-email">
-          ${escapeHTML(email)}
-        </div>
-
-      </div>
-
-    </div>
-
-    <div class="menu-list">
-
-      <button
-        class="menu-item"
-        onclick="openProfileSettings()">
-
-        <span class="menu-left">
-
-          <span class="menu-icon">
-            👤
-          </span>
-
-          <span>
-            Ganti profil
-          </span>
-
-        </span>
-
-        <span class="menu-arrow">
-          ›
-        </span>
-
-      </button>
-
-      <button
-        class="menu-item"
-        onclick="openSettings()">
-
-        <span class="menu-left">
-
-          <span class="menu-icon">
-            ⚙️
-          </span>
-
-          <span>
-            Settings
-          </span>
-
-        </span>
-
-        <span class="menu-arrow">
-          ›
-        </span>
-
-      </button>
-
-      <button
-        class="menu-item"
-        onclick="openOrders()">
-
-        <span class="menu-left">
-
-          <span class="menu-icon">
-            🧾
-          </span>
-
-          <span>
-            Pesanan saya
-          </span>
-
-        </span>
-
-        <span class="menu-arrow">
-          ›
-        </span>
-
-      </button>
-
-      <button
-        class="menu-item logout"
-        onclick="logout()">
-
-        <span class="menu-left">
-
-          <span class="menu-icon">
-            🚪
-          </span>
-
-          <span>
-            Keluar
-          </span>
-
-        </span>
-
-        <span class="menu-arrow">
-          ›
-        </span>
-
-      </button>
-
-    </div>
-
-  `);
-
-}
-
-/* =========================================================
-   SETTINGS
-========================================================= */
-
-function openSettings(){
-
-  const night =
-    document.body.classList.contains(
-      'night-mode'
-    );
-
-  showModal(`
-
-    <div class="modal-head">
-
-      <h3>
-        Settings ⚙️
-      </h3>
-
-      <button
-        class="x"
-        onclick="openAccountMenu()">
+        onclick="closeModal()"
+      >
         ×
       </button>
 
     </div>
 
     <p class="sub">
-      Atur tampilan Top up Clouds
-      sesuai keinginan kamu.
+
+      ${escapeHTML(
+        message
+      )}
+
     </p>
-
-    <div class="setting-row">
-
-      <div>
-
-        <div class="setting-title">
-          🌙 Dark Mode / Night Mode
-        </div>
-
-        <div class="setting-desc">
-          Membuat tampilan menjadi lebih gelap
-          seperti suasana malam.
-        </div>
-
-      </div>
-
-      <label class="switch">
-
-        <input
-          type="checkbox"
-          id="nightToggle"
-          ${
-            night
-              ? 'checked'
-              : ''
-          }
-          onchange="toggleNightMode(this.checked)">
-
-        <span class="slider"></span>
-
-      </label>
-
-    </div>
-
-    <div class="setting-row">
-
-      <div>
-
-        <div class="setting-title">
-          ☁️ Tema tersimpan
-        </div>
-
-        <div class="setting-desc">
-          Pilihan tema otomatis disimpan
-          di perangkat ini.
-        </div>
-
-      </div>
-
-      <span class="status">
-        ${
-          night
-            ? 'Malam'
-            : 'Siang'
-        }
-      </span>
-
-    </div>
-
-    <button
-      class="secondary"
-      onclick="openAccountMenu()">
-
-      Kembali
-
-    </button>
-
-  `);
-
-}
-
-/* =========================================================
-   NIGHT MODE
-========================================================= */
-
-function toggleNightMode(enabled){
-
-  if(enabled){
-
-    document.body.classList.add(
-      'night-mode'
-    );
-
-    localStorage.setItem(
-      themeKey,
-      'night'
-    );
-
-  }else{
-
-    document.body.classList.remove(
-      'night-mode'
-    );
-
-    localStorage.setItem(
-      themeKey,
-      'day'
-    );
-
-  }
-
-}
-
-/* =========================================================
-   LOAD THEME
-========================================================= */
-
-function loadTheme(){
-
-  const theme =
-    localStorage.getItem(
-      themeKey
-    );
-
-  if(theme === 'night'){
-
-    document.body.classList.add(
-      'night-mode'
-    );
-
-  }else{
-
-    document.body.classList.remove(
-      'night-mode'
-    );
-
-  }
-
-}
-
-/* =========================================================
-   PROFILE SETTINGS
-========================================================= */
-
-function openProfileSettings(){
-
-  const profile =
-    getProfile();
-
-  const name =
-    profile.name ||
-    user?.name ||
-    '';
-
-  showModal(`
-
-    <div class="modal-head">
-
-      <h3>
-        Ganti Profil 👤
-      </h3>
-
-      <button
-        class="x"
-        onclick="openAccountMenu()">
-        ×
-      </button>
-
-    </div>
-
-    <div class="profile-preview">
-
-      <div id="profilePreview">
-
-        ${avatarHTML('big')}
-
-      </div>
-
-      <div class="sub">
-        Foto profil hanya disimpan
-        di perangkat ini.
-      </div>
-
-    </div>
-
-    <div class="field">
-
-      <label>
-        Nama tampilan
-      </label>
-
-      <input
-        id="profileName"
-        type="text"
-        maxlength="40"
-        value="${escapeHTML(name)}"
-        placeholder="Nama kamu">
-
-    </div>
-
-    <div class="field">
-
-      <label>
-        Foto profil
-      </label>
-
-      <input
-        id="profilePhoto"
-        type="file"
-        accept="image/*"
-        onchange="previewProfilePhoto(event)">
-
-    </div>
 
     <button
       class="primary"
-      onclick="saveProfileSettings()">
+      onclick="openOrders()"
+    >
 
-      Simpan profil
-
-    </button>
-
-    <button
-      class="secondary"
-      onclick="openAccountMenu()">
-
-      Batal
+      ${
+        currentLanguage === "en"
+          ? "Check orders"
+          : "Cek pesanan"
+      }
 
     </button>
 
   `);
-
 }
 
-/* =========================================================
-   PROFILE PHOTO PREVIEW
-========================================================= */
 
-function previewProfilePhoto(event){
-
-  const file =
-    event.target.files?.[0];
-
-  if(!file) return;
-
-  if(file.size > 2 * 1024 * 1024){
-
-    alert(
-      'Ukuran foto maksimal 2 MB.'
-    );
-
-    event.target.value = '';
-
-    return;
-
-  }
-
-  const reader =
-    new FileReader();
-
-  reader.onload = () => {
-
-    document.getElementById(
-      'profilePreview'
-    ).innerHTML = `
-
-      <div class="profile-big">
-
-        <img
-          src="${reader.result}"
-          alt="Preview">
-
-      </div>
-
-    `;
-
-  };
-
-  reader.readAsDataURL(file);
-
-}
-
-/* =========================================================
-   SAVE PROFILE
-========================================================= */
-
-function saveProfileSettings(){
-
-  const name =
-    document
-      .getElementById('profileName')
-      .value
-      .trim();
-
-  const photoInput =
-    document.getElementById(
-      'profilePhoto'
-    );
-
-  const file =
-    photoInput?.files?.[0];
-
-  const old =
-    getProfile();
-
-  if(!name){
-
-    alert(
-      'Nama tampilan wajib diisi.'
-    );
-
-    return;
-
-  }
-
-  const save = photo => {
-
-    const newProfile = {
-
-      ...old,
-
-      name,
-
-      email:
-        user?.email ||
-        old.email ||
-        '',
-
-      photo:
-        photo ||
-        old.photo ||
-        ''
-
-    };
-
-    localStorage.setItem(
-      profileKey,
-      JSON.stringify(
-        newProfile
-      )
-    );
-
-    if(user){
-
-      user.name = name;
-
-    }
-
-    updateAccountButton();
-
-    openAccountMenu();
-
-  };
-
-  if(file){
-
-    if(file.size > 2 * 1024 * 1024){
-
-      alert(
-        'Ukuran foto maksimal 2 MB.'
-      );
-
-      return;
-
-    }
-
-    const reader =
-      new FileReader();
-
-    reader.onload = () =>
-      save(reader.result);
-
-    reader.readAsDataURL(file);
-
-  }else{
-
-    save('');
-
-  }
-
-}
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
-function logout(){
-
-  const ok =
-    confirm(
-      'Yakin ingin keluar dari akun Top up Clouds?'
-    );
-
-  if(!ok) return;
-
-  localStorage.removeItem(
-    tokenKey
-  );
-
-  user = null;
-
-  updateAccountButton();
-
-  closeModal();
-
-  alert(
-    'Kamu sudah keluar dari akun.'
-  );
-
-}
-
-/* =========================================================
+/* =========================================
    ORDERS
-========================================================= */
+========================================= */
 
 async function openOrders(){
 
+  closeAccountMenu();
+
   if(!token()){
 
-    openAuth('login');
+    openAuth("login");
 
     return;
 
@@ -3446,154 +4051,182 @@ async function openOrders(){
   try{
 
     orders =
-      await api('/api/orders');
+      await api(
+        "/api/orders"
+      );
 
     showModal(`
 
       <div class="modal-head">
 
         <h3>
-          Pesanan saya
+          ${T.orders}
         </h3>
 
         <button
           class="x"
-          onclick="closeModal()">
+          onclick="closeModal()"
+        >
           ×
         </button>
 
       </div>
 
+
       <p class="sub">
-        ${orders.length} pesanan
+
+        ${orders.length}
+
+        ${
+          currentLanguage === "en"
+            ? "orders"
+            : "pesanan"
+        }
+
       </p>
+
 
       ${
         orders.length
 
-        ?
+          ? orders.map(o => `
 
-        orders.map(
-          o => `
+              <div
+                class="card"
+                style="margin:10px 0"
+              >
 
-          <div
-            class="card"
-            style="margin:10px 0">
+                <b>
+                  ${escapeHTML(
+                    o.name
+                  )}
+                </b>
 
-            <b>
-              ${escapeHTML(
-                o.name
-              )}
-            </b>
+                <div class="sub">
 
-            <div class="sub">
+                  ${escapeHTML(
+                    providerName(
+                      o.provider
+                    )
+                  )}
 
-              ${providerName(
-                o.provider
-              )}
+                  ·
 
-              ·
+                  ${Number(
+                    o.duration_days
+                  )}
+                  hari
 
-              ${o.duration_days}
-              hari
+                  ·
 
-              ·
+                  ${rupiah(
+                    o.amount
+                  )}
 
-              ${rupiah(
-                o.amount
-              )}
+                </div>
 
-            </div>
 
-            <div class="orderline">
+                <div class="orderline">
 
-              <span>
-                ${escapeHTML(
-                  o.id
-                )}
-              </span>
+                  <span>
 
-              <span class="status">
-                ${escapeHTML(
-                  o.payment_status
-                )}
-              </span>
+                    ${escapeHTML(
+                      o.id
+                    )}
 
-            </div>
+                  </span>
 
-            ${
-              o.redeem_code
+                  <span class="status">
 
-              ?
+                    ${escapeHTML(
+                      o.payment_status
+                    )}
 
-              `
-              <div class="codebox">
-                ${escapeHTML(
+                  </span>
+
+                </div>
+
+
+                ${
                   o.redeem_code
-                )}
+
+                    ? `
+
+                      <div class="codebox">
+
+                        ${escapeHTML(
+                          o.redeem_code
+                        )}
+
+                      </div>
+
+                    `
+
+                    : ""
+                }
+
               </div>
-              `
 
-              :
+            `).join("")
 
-              ''
-            }
+          : `
 
-          </div>
+            <p class="empty">
+
+              ${
+                currentLanguage === "en"
+                  ? "No orders yet."
+                  : "Belum ada pesanan."
+              }
+
+            </p>
 
           `
-        ).join('')
-
-        :
-
-        `
-        <p class="empty">
-          Belum ada pesanan.
-        </p>
-        `
       }
+
 
       <button
         class="secondary"
-        onclick="closeModal()">
+        onclick="closeModal()"
+      >
 
-        Tutup
+        ${T.close}
 
       </button>
 
     `);
 
-  }catch(e){
+  }catch(error){
 
     if(
-      e.message
+      error.message
         .toLowerCase()
-        .includes('sesi')
+        .includes("sesi")
     ){
 
       localStorage.removeItem(
         tokenKey
       );
 
-      user = null;
+      updateAccountUI();
 
-      updateAccountButton();
-
-      openAuth('login');
+      openAuth("login");
 
     }else{
 
-      alert(e.message);
+      toast(
+        error.message
+      );
 
     }
 
   }
-
 }
 
-/* =========================================================
-   HELP
-========================================================= */
+
+/* =========================================
+   INFO
+========================================= */
 
 function showInfo(){
 
@@ -3607,178 +4240,277 @@ function showInfo(){
 
       <button
         class="x"
-        onclick="closeModal()">
+        onclick="closeModal()"
+      >
         ×
       </button>
 
     </div>
 
+
     <p class="sub">
 
-      Pembayaran diproses melalui Midtrans.
-      Redeem Code ditampilkan di akun
-      setelah server memverifikasi
-      status pembayaran.
+      ${
+        currentLanguage === "en"
+          ? "Payments are processed through Midtrans. Redeem Codes appear in the account after the server verifies payment status."
+          : "Pembayaran diproses melalui Midtrans. Redeem Code ditampilkan di akun setelah server memverifikasi status pembayaran."
+      }
 
     </p>
 
+
     <div class="note">
 
-      Top up Clouds adalah toko independen.
-      Jangan memasukkan password akun
-      cloud phone ke toko.
+      ${
+        currentLanguage === "en"
+          ? "Top up Clouds is an independent store. Never enter your cloud phone account password into the store."
+          : "Top up Clouds adalah toko independen. Jangan memasukkan password akun cloud phone ke toko."
+      }
 
     </div>
 
+
     <button
       class="primary"
-      onclick="closeModal()">
+      onclick="closeModal()"
+    >
 
-      Mengerti
+      ${
+        currentLanguage === "en"
+          ? "Understood"
+          : "Mengerti"
+      }
 
     </button>
 
   `);
-
 }
 
-/* =========================================================
+
+/* =========================================
    SHOP SCROLL
-========================================================= */
+========================================= */
 
 function goShop(){
 
-  document
-    .getElementById('shop')
-    .scrollIntoView({
-      behavior:'smooth'
-    });
+  $("shop").scrollIntoView({
+    behavior:
+      window.innerWidth <= 780
+        ? "auto"
+        : "smooth"
+  });
 
 }
 
-/* =========================================================
-   CHECK CURRENT USER
-========================================================= */
 
-async function loadCurrentUser(){
+/* =========================================
+   CONFIG
+========================================= */
 
-  if(!token()){
+async function loadConfig(){
 
-    updateAccountButton();
+  try{
 
-    return;
+    const response =
+      await fetch(
+        "/api/config",
+        {
+          cache:"no-store"
+        }
+      );
+
+    if(!response.ok){
+
+      return;
+
+    }
+
+    const data =
+      await response.json();
+
+    if(
+      data &&
+      typeof data === "object"
+    ){
+
+      cfg = {
+        ...cfg,
+        ...data
+      };
+
+    }
+
+  }catch(error){
+
+    console.warn(
+      "Config Midtrans gagal dimuat:",
+      error
+    );
 
   }
+}
 
-  /*
-    Coba beberapa endpoint profil yang umum.
-    Jika backend kamu belum punya endpoint ini,
-    token tetap dipertahankan sehingga fitur order
-    yang sudah ada tetap dapat digunakan.
-  */
 
-  const endpoints = [
-    '/api/me',
-    '/api/profile',
-    '/api/user'
-  ];
+/* =========================================
+   SCROLL OPTIMIZATION
+========================================= */
 
-  for(const endpoint of endpoints){
+let scrollTimer;
 
-    try{
+window.addEventListener(
+  "scroll",
+  function(){
 
-      const d =
-        await api(endpoint);
+    document.body
+      .classList.add(
+        "is-scrolling"
+      );
 
-      if(d){
+    clearTimeout(
+      scrollTimer
+    );
 
-        user = {
-          ...d,
+    scrollTimer =
+      setTimeout(
+        () => {
 
-          email:
-            d.email ||
-            getProfile().email ||
-            ''
-        };
+          document.body
+            .classList.remove(
+              "is-scrolling"
+            );
 
-        saveProfile();
+        },
+        120
+      );
 
-        updateAccountButton();
+  },
+  {
+    passive:true
+  }
+);
 
-        return;
 
-      }
+/* =========================================
+   EVENTS
+========================================= */
 
-    }catch(e){
+$("overlay").addEventListener(
+  "click",
+  function(event){
 
-      /*
-        Endpoint belum tersedia.
-        Jangan hapus token hanya karena
-        endpoint profil tidak tersedia.
-      */
+    if(
+      event.target ===
+      $("overlay")
+    ){
+
+      closeModal();
 
     }
 
   }
+);
 
-  const profile =
-    getProfile();
 
-  if(profile.email){
+document.addEventListener(
+  "keydown",
+  function(event){
 
-    user = {
-      email:profile.email,
-      name:profile.name || ''
-    };
+    if(
+      event.key ===
+      "Escape"
+    ){
+
+      closeModal();
+
+      closeAccountMenu();
+
+    }
 
   }
+);
 
-  updateAccountButton();
 
-}
+document.addEventListener(
+  "click",
+  function(event){
 
-/* =========================================================
+    const wrap =
+      document.querySelector(
+        ".account-wrap"
+      );
+
+    if(
+      wrap &&
+      !wrap.contains(
+        event.target
+      )
+    ){
+
+      closeAccountMenu();
+
+    }
+
+  }
+);
+
+
+/* =========================================
    BOOT
-========================================================= */
+========================================= */
 
 async function boot(){
 
   loadTheme();
 
-  await loadCurrentUser();
+  T =
+    translations[
+      currentLanguage
+    ];
+
+  updateAccountUI();
 
   try{
 
+    await loadConfig();
+
     products =
-      await api('/api/products');
-
-    if(
-      cfg.clientKey &&
-      !window.snap
-    ){
-
-      /*
-        Jangan memaksa load Snap
-        jika client key belum ada.
-      */
-
-      await loadSnap();
-
-    }
+      await api(
+        "/api/products"
+      );
 
     render();
 
-  }catch(e){
+    if(cfg.clientKey){
 
-    document.getElementById(
-      'products'
-    ).innerHTML = `
+      try{
+
+        await loadSnap();
+
+      }catch(error){
+
+        console.warn(
+          "Midtrans Snap belum siap:",
+          error
+        );
+
+      }
+
+    }
+
+  }catch(error){
+
+    $("products").innerHTML = `
 
       <div class="empty">
 
-        Gagal memuat toko:
+        ${
+          currentLanguage === "en"
+            ? "Failed to load store:"
+            : "Gagal memuat toko:"
+        }
+
         ${escapeHTML(
-          e.message
+          error.message
         )}
 
       </div>
@@ -3789,45 +4521,6 @@ async function boot(){
 
 }
 
-/* =========================================================
-   CLOSE MODAL WHEN CLICK OUTSIDE
-========================================================= */
-
-document
-  .getElementById('overlay')
-  .addEventListener(
-    'click',
-    function(e){
-
-      if(e.target === this){
-
-        closeModal();
-
-      }
-
-    }
-  );
-
-/* =========================================================
-   ESCAPE KEY
-========================================================= */
-
-document.addEventListener(
-  'keydown',
-  function(e){
-
-    if(e.key === 'Escape'){
-
-      closeModal();
-
-    }
-
-  }
-);
-
-/* =========================================================
-   START
-========================================================= */
 
 boot();
 
