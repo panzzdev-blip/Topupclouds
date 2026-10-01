@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import Database from 'better-sqlite3';
 import midtransClient from 'midtrans-client';
 import crypto from 'crypto';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -11,7 +12,18 @@ dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json({ limit: '1mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+
+const resolvePublicDir = () => {
+  const candidates = [
+    path.join(__dirname, 'public'),
+    path.join(__dirname, 'Public'),
+    __dirname
+  ];
+  return candidates.find(dir => fs.existsSync(dir)) || path.join(__dirname, 'public');
+};
+
+const publicDir = resolvePublicDir();
+app.use(express.static(publicDir));
 
 const db = new Database(path.join(__dirname, 'data.db'));
 db.pragma('journal_mode = WAL');
@@ -167,13 +179,13 @@ app.post('/api/admin/codes',admin,(req,res)=>{
   const stmt=db.prepare('INSERT INTO codes(product_id,redeem_code) VALUES(?,?)'); let count=0;
   const tx=db.transaction(arr=>{for(const c of arr){try{stmt.run(productId,c);count++;}catch{}}});tx(codes);res.json({ok:true,count});
 });
-app.get('/api/admin/codes',admin,(req,res)=>res.json(db.prepare('SELECT c.id,c.product_id,p.provider,p.name,p.duration_days,c.redeem_code,c.status,c.order_id FROM codes c JOIN products p ON p.id=c.product_id ORDER BY c.id DESC LIMIT 500').all()));
-app.get('/api/admin/orders',admin,(req,res)=>res.json(db.prepare('SELECT o.*,u.email,p.provider,p.name,p.duration_days FROM orders o LEFT JOIN users u ON u.id=o.user_id JOIN products p ON p.id=o.product_id ORDER BY o.created_at DESC LIMIT 500').all()));
+app.get('/api/admin/codes',admin,(req,res)=>res.json(db.prepare('SELECT c.id,c.product_id,p.provider,p.name,p.duration_days,c.redeem_code,c.status,c.order_id FROM codes c JOIN products p ON p.id=c.product_id ORDER BY c.id DESC').all()));
+app.get('/api/admin/orders',admin,(req,res)=>res.json(db.prepare('SELECT o.*,u.email,p.provider,p.name,p.duration_days FROM orders o LEFT JOIN users u ON u.id=o.user_id JOIN products p ON p.id=o.product_id ORDER BY o.created_at DESC').all()));
 app.get('/api/admin/stats',admin,(req,res)=>res.json({users:db.prepare('SELECT COUNT(*) c FROM users').get().c,products:db.prepare('SELECT COUNT(*) c FROM products WHERE active=1').get().c,available_codes:db.prepare("SELECT COUNT(*) c FROM codes WHERE status='available'").get().c,paid_orders:db.prepare("SELECT COUNT(*) c FROM orders WHERE payment_status='paid'").get().c}));
 
 app.get('/health',(req,res)=>res.json({ok:true,service:'top-up-clouds'}));
-app.get('/admin',(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
-app.get('/{*splat}',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+app.get('/admin',(req,res)=>res.sendFile(path.join(publicDir,'admin.html')));
+app.get('/{*splat}',(req,res)=>res.sendFile(path.join(publicDir,'index.html')));
 
 const port=Number(process.env.PORT||3000);
 app.listen(port,()=>console.log(`Top up Clouds running on http://localhost:${port}`));
