@@ -12,6 +12,7 @@ dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
 
 const resolvePublicDir = () => {
   const candidates = [
@@ -30,9 +31,9 @@ db.pragma('journal_mode = WAL');
 db.exec(`
 CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,email TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS sessions(token_hash TEXT PRIMARY KEY,user_id INTEGER NOT NULL,expires_at INTEGER NOT NULL,created_at TEXT DEFAULT CURRENT_TIMESTAMP);
-CREATE TABLE IF NOT EXISTS products(id INTEGER PRIMARY KEY AUTOINCREMENT,provider TEXT NOT NULL,name TEXT NOT NULL,duration_days INTEGER NOT NULL,price INTEGER NOT NULL CHECK(price>=0),active INTEGER DEFAULT 1);
-CREATE TABLE IF NOT EXISTS codes(id INTEGER PRIMARY KEY AUTOINCREMENT,product_id INTEGER NOT NULL,redeem_code TEXT UNIQUE NOT NULL,status TEXT DEFAULT 'available',order_id TEXT,reserved_until INTEGER);
-CREATE TABLE IF NOT EXISTS orders(id TEXT PRIMARY KEY,user_id INTEGER,product_id INTEGER NOT NULL,code_id INTEGER,amount INTEGER NOT NULL,payment_status TEXT DEFAULT 'pending',redeem_code TEXT,midtrans_transaction_id TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,paid_at TEXT);
+CREATE TABLE IF NOT EXISTS products(id INTEGER PRIMARY KEY AUTOINCREMENT,provider TEXT NOT NULL,name TEXT NOT NULL,duration_days INTEGER NOT NULL,price INTEGER NOT NULL CHECK(price>=0),active INTEGER NOT NULL DEFAULT 1 CHECK(active IN (0,1)),created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS codes(id INTEGER PRIMARY KEY AUTOINCREMENT,product_id INTEGER NOT NULL,redeem_code TEXT UNIQUE NOT NULL,status TEXT DEFAULT 'available',order_id TEXT,reserved_until INTEGER,created_at TEXT DEFAULT CURRENT_TIMESTAMP,FOREIGN KEY(product_id) REFERENCES products(id));
+CREATE TABLE IF NOT EXISTS orders(id TEXT PRIMARY KEY,user_id INTEGER,product_id INTEGER NOT NULL,code_id INTEGER,amount INTEGER NOT NULL,payment_status TEXT DEFAULT 'pending',redeem_code TEXT,midtrans_transaction_id TEXT,created_at TEXT DEFAULT CURRENT_TIMESTAMP,paid_at TEXT,FOREIGN KEY(user_id) REFERENCES users(id),FOREIGN KEY(product_id) REFERENCES products(id),FOREIGN KEY(code_id) REFERENCES codes(id));
 CREATE INDEX IF NOT EXISTS idx_codes_stock ON codes(product_id,status);
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id,created_at);
 `);
@@ -171,7 +172,7 @@ app.post('/api/admin/products',admin,(req,res)=>{
   const r=db.prepare('INSERT INTO products(provider,name,duration_days,price) VALUES(?,?,?,?)').run(provider,name,duration,price); res.json({id:r.lastInsertRowid});
 });
 app.get('/api/admin/products',admin,(req,res)=>res.json(db.prepare('SELECT * FROM products ORDER BY id DESC').all()));
-app.patch('/api/admin/products/:id',admin,(req,res)=>{const fields=[],values=[];for(const k of ['provider','name','duration_days','price','active'])if(req.body[k]!==undefined){fields.push(`${k}=?`);values.push(req.body[k]);}if(!fields.length)return res.status(400).json({error:'Tidak ada field yang diubah'});values.push(Number(req.params.id));db.prepare(`UPDATE products SET ${fields.join(',')} WHERE id=?`).run(...values);res.json({ok:true});});
+app.patch('/api/admin/products/:id',admin,(req,res)=>{const fields=[],values=[];for(const k of ['provider','name','duration_days','price','active'])if(req.body[k]!==undefined){fields.push(`${k}=?`);values.push(req.body[k]);}if(!fields.length)return res.status(400).json({error:'Tidak ada field yang diubah'});values.push(Number(req.params.id));db.prepare(`UPDATE products SET ${fields.join(', ')} WHERE id=?`).run(...values);res.json({ok:true});});
 app.post('/api/admin/codes',admin,(req,res)=>{
   const productId=Number(req.body.product_id), codes=Array.isArray(req.body.codes)?req.body.codes.map(x=>String(x).trim()).filter(Boolean):[];
   if(!productId||!codes.length)return res.status(400).json({error:'product_id dan codes wajib diisi'});
@@ -180,11 +181,12 @@ app.post('/api/admin/codes',admin,(req,res)=>{
 });
 app.get('/api/admin/codes',admin,(req,res)=>res.json(db.prepare('SELECT c.id,c.product_id,p.provider,p.name,p.duration_days,c.redeem_code,c.status,c.order_id FROM codes c JOIN products p ON p.id=c.product_id ORDER BY c.id DESC').all()));
 app.get('/api/admin/orders',admin,(req,res)=>res.json(db.prepare('SELECT o.*,u.email,p.provider,p.name,p.duration_days FROM orders o LEFT JOIN users u ON u.id=o.user_id JOIN products p ON p.id=o.product_id ORDER BY o.created_at DESC').all()));
-app.get('/api/admin/stats',admin,(req,res)=>res.json({users:db.prepare('SELECT COUNT(*) c FROM users').get().c,products:db.prepare('SELECT COUNT(*) c FROM products WHERE active=1').get().c,available:db.prepare('SELECT COUNT(*) c FROM codes WHERE status="available"').get().c,orders:db.prepare('SELECT COUNT(*) c FROM orders').get().c}));
+app.get('/api/admin/stats',admin,(req,res)=>res.json({users:db.prepare('SELECT COUNT(*) c FROM users').get().c,products:db.prepare('SELECT COUNT(*) c FROM products WHERE active=1').get().c,available_codes:db.prepare('SELECT COUNT(*) c FROM codes WHERE status="available"').get().c,orders:db.prepare('SELECT COUNT(*) c FROM orders').get().c}));
 
 app.get('/health',(req,res)=>res.json({ok:true,service:'top-up-clouds'}));
-app.get('/admin',(req,res)=>res.sendFile(path.join(publicDir,'admin.html')));
-app.get('/{*splat}',(req,res)=>res.sendFile(path.join(publicDir,'index.html')));
+app.get('/', (req,res) => res.sendFile(path.join(publicDir, 'index.html')));
+app.get('/admin', (req,res) => res.sendFile(path.join(publicDir, 'admin.html')));
+app.get(/^\/(?!api).+/, (req,res) => res.sendFile(path.join(publicDir, 'index.html')));
 
 const port=Number(process.env.PORT||3000);
 app.listen(port,()=>console.log(`Top up Clouds running on http://localhost:${port}`));
