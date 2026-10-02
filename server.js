@@ -35,14 +35,14 @@ app.use(
   })
 );
 
+// Keep the public directory support for compatibility, but the actual
+// app entry files live in the project root.
 app.use(
   express.static(
     path.join(__dirname, 'public')
   )
 );
 
-// Serve the actual app entry files from the project root when the
-// frontend is not stored in a separate public/ directory.
 app.use(
   express.static(__dirname)
 );
