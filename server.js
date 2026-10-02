@@ -2482,20 +2482,12 @@ app.get(
  * app.get('/{*splat}', ...)
  * problem on some Express versions.
  */
-app.get(
-  '/{*splat}',
-  (req,res) => {
-
-    res.sendFile(
-      path.join(
-        __dirname,
-        'public',
-        'index.html'
-      )
-    );
-
-  }
-);
+app.use((req,res,next) => {
+  if (req.method !== 'GET' || req.path.startsWith('/api/')) return next();
+  res.sendFile(path.join(__dirname, 'public', 'index.html'), err => {
+    if (err) next(err);
+  });
+});
 
 
 /* =========================================================
@@ -2534,6 +2526,14 @@ app.use(
 /* =========================================================
    START SERVER
 ========================================================= */
+
+console.log('Startup check:', {
+  publicIndex: fs.existsSync(path.join(__dirname,'public','index.html')),
+  publicAdmin: fs.existsSync(path.join(__dirname,'public','admin.html')),
+  dbPath: DB_PATH,
+  midtransProduction: MIDTRANS_IS_PRODUCTION,
+  adminKeyConfigured: Boolean(process.env.ADMIN_KEY)
+});
 
 app.listen(
   PORT,
