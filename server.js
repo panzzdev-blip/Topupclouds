@@ -370,6 +370,11 @@ app.get('/api/admin/check', admin, (req,res) => {
 
 
 app.get(
+  '/api/health',
+  (req,res) => res.json({ ok:true, service:'top-up-clouds', time:new Date().toISOString() })
+);
+
+app.get(
   '/health',
   (req,res) => {
 
@@ -2516,7 +2521,7 @@ app.use(
     jsonError(
       res,
       500,
-      'Internal server error'
+      'Kesalahan server internal'
     );
 
   }
