@@ -92,6 +92,98 @@ body.night .mist{
   );
 }
 
+
+/* =========================================
+   PREMIUM DARK / PERFORMANCE LAYER
+========================================= */
+body.night{
+  --text:#f8fbff;
+  --muted:#a9bfd3;
+  --line:#ffffff18;
+}
+
+body.night .glass,
+body.night .card,
+body.night .account-menu,
+body.night .modal{
+  background:linear-gradient(145deg,#0a1424ee,#050b14e8);
+  border-color:#ffffff16;
+  box-shadow:0 24px 70px #00000055, inset 0 1px #ffffff08;
+}
+
+body.night .hero h1 span{
+  background:linear-gradient(90deg,#79e7ff,#b6a7ff 55%,#7af4c0);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+body.performance *{
+  animation-duration:.001ms !important;
+  animation-iteration-count:1 !important;
+  transition-duration:.12s !important;
+  scroll-behavior:auto !important;
+}
+
+body.performance .cloud,
+body.performance .ring,
+body.performance .mini-cloud,
+body.performance .mist{
+  display:none !important;
+}
+
+body.performance .glass,
+body.performance .card,
+body.performance .hero-art,
+body.performance .account-menu,
+body.performance .modal{
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  box-shadow:0 12px 35px #00000030;
+}
+
+.profile-editor{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 190px;
+  gap:18px;
+  align-items:center;
+}
+.profile-editor-stage{
+  min-height:250px;
+  display:grid;
+  place-items:center;
+  border:1px solid #ffffff18;
+  border-radius:18px;
+  background:radial-gradient(circle,#153554,#07111d 72%);
+  overflow:hidden;
+}
+.profile-canvas-wrap{
+  width:min(250px,72vw);
+  aspect-ratio:1;
+  border-radius:50%;
+  overflow:hidden;
+  border:3px solid #ffffff50;
+  box-shadow:0 18px 55px #0008,0 0 0 8px #ffffff08;
+  background:#0b1624;
+}
+#profileCropCanvas{
+  width:100%;height:100%;display:block;
+}
+.crop-controls{display:grid;gap:11px}
+.crop-control{display:grid;gap:6px}
+.crop-control label{font-size:11px;color:#a9bfd3;display:flex;justify-content:space-between}
+.crop-control input[type=range]{width:100%;accent-color:#72dcff}
+.crop-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.crop-actions button{flex:1;min-width:100px}
+@media(max-width:650px){
+  .profile-editor{grid-template-columns:1fr}
+  .profile-editor-stage{min-height:230px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important}
+}
+
 /* =========================================
    SKY
 ========================================= */
@@ -247,8 +339,8 @@ body.is-scrolling .mini-cloud{
   }
 
   .cloud{
-    animation-duration:90s;
-    opacity:.45;
+    animation-duration:120s;
+    opacity:.30;
   }
 
   .c2,
@@ -1827,8 +1919,7 @@ const profileImageKey = "tc_profile_image";
 const themeKey = "tc_theme";
 const languageKey = "tc_language";
 
-let currentLanguage =
-  localStorage.getItem(languageKey) || "id";
+let currentLanguage = localStorage.getItem(languageKey) || "id";
 
 
 const $ = id =>
@@ -1845,39 +1936,71 @@ const token = () =>
 const translations = {
 
   id:{
-    profile:"Profil",
-    settings:"Pengaturan",
-    orders:"Pesanan saya",
-    logout:"Keluar",
-    language:"Bahasa",
-    languageDesc:"Pilih bahasa tampilan website.",
-    night:"Mode malam",
-    nightDesc:"Ubah tampilan menjadi suasana malam.",
-    editProfile:"Edit profil",
-    editProfileDesc:"Ganti nama dan foto profil.",
-    reset:"Reset",
-    close:"Tutup"
+    profile:"Profil", settings:"Pengaturan", orders:"Pesanan saya", logout:"Keluar",
+    language:"Bahasa", languageDesc:"Pilih bahasa tampilan website.", night:"Mode malam",
+    nightDesc:"Tampilan gelap premium yang lebih nyaman.", performance:"Mode ringan",
+    performanceDesc:"Kurangi animasi dan efek untuk performa maksimal.", editProfile:"Edit profil",
+    editProfileDesc:"Ganti nama dan atur foto profil.", reset:"Reset", close:"Tutup", save:"Simpan",
+    crop:"Sesuaikan foto", zoom:"Zoom", horizontal:"Kiri / kanan", vertical:"Atas / bawah",
+    choose:"Pilih foto", remove:"Hapus foto"
   },
 
   en:{
-    profile:"Profile",
-    settings:"Settings",
-    orders:"My Orders",
-    logout:"Logout",
-    language:"Language",
-    languageDesc:"Choose the website language.",
-    night:"Night mode",
-    nightDesc:"Change the website to night mode.",
-    editProfile:"Edit profile",
-    editProfileDesc:"Change your name and profile image.",
-    reset:"Reset",
-    close:"Close"
+    profile:"Profile", settings:"Settings", orders:"My Orders", logout:"Logout",
+    language:"Language", languageDesc:"Choose the website language.", night:"Night mode",
+    nightDesc:"A premium dark look that is easier on the eyes.", performance:"Lite mode",
+    performanceDesc:"Reduce animation and effects for maximum performance.", editProfile:"Edit profile",
+    editProfileDesc:"Change your name and adjust your profile photo.", reset:"Reset", close:"Close", save:"Save",
+    crop:"Adjust photo", zoom:"Zoom", horizontal:"Left / right", vertical:"Up / down",
+    choose:"Choose photo", remove:"Remove photo"
+  },
+
+  ms:{
+    profile:"Profil", settings:"Tetapan", orders:"Pesanan saya", logout:"Log keluar",
+    language:"Bahasa", languageDesc:"Pilih bahasa laman web.", night:"Mod malam",
+    nightDesc:"Paparan gelap yang lebih selesa.", performance:"Mod ringan",
+    performanceDesc:"Kurangkan animasi dan kesan untuk prestasi maksimum.", editProfile:"Edit profil",
+    editProfileDesc:"Tukar nama dan laraskan foto profil.", reset:"Set semula", close:"Tutup", save:"Simpan",
+    crop:"Laraskan foto", zoom:"Zum", horizontal:"Kiri / kanan", vertical:"Atas / bawah",
+    choose:"Pilih foto", remove:"Buang foto"
+  },
+
+  zh:{
+    profile:"个人资料", settings:"设置", orders:"我的订单", logout:"退出",
+    language:"语言", languageDesc:"选择网站显示语言。", night:"深色模式",
+    nightDesc:"更舒适的高级深色界面。", performance:"轻量模式",
+    performanceDesc:"减少动画和特效以提升性能。", editProfile:"编辑资料",
+    editProfileDesc:"修改名称并调整头像。", reset:"重置", close:"关闭", save:"保存",
+    crop:"调整照片", zoom:"缩放", horizontal:"左右", vertical:"上下",
+    choose:"选择照片", remove:"删除照片"
+  },
+
+  es:{
+    profile:"Perfil", settings:"Ajustes", orders:"Mis pedidos", logout:"Cerrar sesión",
+    language:"Idioma", languageDesc:"Elige el idioma del sitio.", night:"Modo oscuro",
+    nightDesc:"Un diseño oscuro premium más cómodo.", performance:"Modo ligero",
+    performanceDesc:"Reduce animaciones y efectos para mejorar el rendimiento.", editProfile:"Editar perfil",
+    editProfileDesc:"Cambia tu nombre y ajusta tu foto.", reset:"Restablecer", close:"Cerrar", save:"Guardar",
+    crop:"Ajustar foto", zoom:"Zoom", horizontal:"Izquierda / derecha", vertical:"Arriba / abajo",
+    choose:"Elegir foto", remove:"Eliminar foto"
+  },
+
+  ar:{
+    profile:"الملف الشخصي", settings:"الإعدادات", orders:"طلباتي", logout:"تسجيل الخروج",
+    language:"اللغة", languageDesc:"اختر لغة الموقع.", night:"الوضع الداكن",
+    nightDesc:"واجهة داكنة مريحة وعصرية.", performance:"الوضع الخفيف",
+    performanceDesc:"تقليل الحركة والمؤثرات لتحسين الأداء.", editProfile:"تعديل الملف",
+    editProfileDesc:"غيّر الاسم واضبط صورة الملف.", reset:"إعادة ضبط", close:"إغلاق", save:"حفظ",
+    crop:"ضبط الصورة", zoom:"تكبير", horizontal:"يمين / يسار", vertical:"أعلى / أسفل",
+    choose:"اختيار صورة", remove:"حذف الصورة"
   }
 
 };
 
-let T =
-  translations[currentLanguage];
+if(!Object.prototype.hasOwnProperty.call(translations,currentLanguage)){ currentLanguage="id"; }
+let T = translations[currentLanguage] || translations.id;
+document.documentElement.dir = currentLanguage === "ar" ? "rtl" : "ltr";
+document.documentElement.lang = currentLanguage === "zh" ? "zh-CN" : currentLanguage;
 
 
 /* =========================================
@@ -2102,32 +2225,26 @@ function toggleNightMode(enabled){
 
 function setLanguage(lang){
 
-  if(
-    lang !== "id" &&
-    lang !== "en"
-  ){
-
+  if(!Object.prototype.hasOwnProperty.call(translations,lang)){
     lang = "id";
-
   }
 
   currentLanguage = lang;
-
-  T =
-    translations[currentLanguage];
-
-  localStorage.setItem(
-    languageKey,
-    currentLanguage
-  );
-
+  T = translations[currentLanguage] || translations.id;
+  localStorage.setItem(languageKey,currentLanguage);
+  document.documentElement.lang = currentLanguage === "zh" ? "zh-CN" : currentLanguage;
+  document.documentElement.dir = currentLanguage === "ar" ? "rtl" : "ltr";
   updateAccountUI();
 
-  toast(
-    currentLanguage === "id"
-      ? "🇮🇩 Bahasa Indonesia dipilih."
-      : "🇬🇧 English selected."
-  );
+  const messages = {
+    id:"🇮🇩 Bahasa Indonesia dipilih.",
+    en:"🇬🇧 English selected.",
+    ms:"🇲🇾 Bahasa Melayu dipilih.",
+    zh:"🇨🇳 已切换中文。",
+    es:"🇪🇸 Español seleccionado.",
+    ar:"🇸🇦 تم اختيار العربية。"
+  };
+  toast(messages[currentLanguage] || messages.id);
 }
 
 
@@ -2309,6 +2426,79 @@ function closeAccountMenu(){
 }
 
 
+let cropState = {
+  image:null,
+  scale:1,
+  x:0,
+  y:0,
+  naturalW:0,
+  naturalH:0
+};
+
+function openCropEditor(dataUrl){
+  cropState = {image:null,scale:1,x:0,y:0,naturalW:0,naturalH:0};
+  showModal(`
+    <div class="modal-head"><h3>🖼️ ${T.crop}</h3><button class="x" onclick="openProfile()">×</button></div>
+    <div class="profile-editor">
+      <div class="profile-editor-stage"><div class="profile-canvas-wrap"><canvas id="profileCropCanvas" width="512" height="512"></canvas></div></div>
+      <div class="crop-controls">
+        <div class="crop-control"><label><span>${T.zoom}</span><b id="zoomValue">100%</b></label><input id="cropZoom" type="range" min="1" max="3" step="0.01" value="1" oninput="updateCropFromUI()"></div>
+        <div class="crop-control"><label><span>${T.horizontal}</span><b id="xValue">0</b></label><input id="cropX" type="range" min="-1" max="1" step="0.01" value="0" oninput="updateCropFromUI()"></div>
+        <div class="crop-control"><label><span>${T.vertical}</span><b id="yValue">0</b></label><input id="cropY" type="range" min="-1" max="1" step="0.01" value="0" oninput="updateCropFromUI()"></div>
+        <div class="crop-actions"><button class="secondary" onclick="resetCrop()">↺ ${T.reset}</button><button class="primary" onclick="saveCroppedProfile()">✓ ${T.save}</button></div>
+      </div>
+    </div>
+  `);
+
+  const img = new Image();
+  img.onload = () => {
+    cropState.image = img; cropState.naturalW = img.naturalWidth; cropState.naturalH = img.naturalHeight;
+    drawCrop();
+  };
+  img.src = dataUrl;
+}
+
+function updateCropFromUI(){
+  cropState.scale = Number($("cropZoom")?.value || 1);
+  cropState.x = Number($("cropX")?.value || 0);
+  cropState.y = Number($("cropY")?.value || 0);
+  $("zoomValue").textContent = Math.round(cropState.scale*100)+"%";
+  $("xValue").textContent = cropState.x.toFixed(2);
+  $("yValue").textContent = cropState.y.toFixed(2);
+  drawCrop();
+}
+
+function resetCrop(){
+  if($("cropZoom")){ $("cropZoom").value="1"; $("cropX").value="0"; $("cropY").value="0"; }
+  updateCropFromUI();
+}
+
+function drawCrop(){
+  const canvas=$("profileCropCanvas"), img=cropState.image;
+  if(!canvas || !img) return;
+  const ctx=canvas.getContext("2d",{alpha:false});
+  const size=512;
+  ctx.fillStyle="#091321"; ctx.fillRect(0,0,size,size);
+  const base=Math.max(size/img.naturalWidth,size/img.naturalHeight);
+  const w=img.naturalWidth*base*cropState.scale;
+  const h=img.naturalHeight*base*cropState.scale;
+  const maxX=Math.max(0,(w-size)/2), maxY=Math.max(0,(h-size)/2);
+  const x=(size-w)/2 + cropState.x*maxX;
+  const y=(size-h)/2 + cropState.y*maxY;
+  ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality="high";
+  ctx.drawImage(img,x,y,w,h);
+}
+
+function saveCroppedProfile(){
+  const canvas=$("profileCropCanvas");
+  if(!canvas) return;
+  const out=document.createElement("canvas"); out.width=512; out.height=512;
+  const ctx=out.getContext("2d"); ctx.drawImage(canvas,0,0);
+  const data=out.toDataURL("image/jpeg",0.88);
+  try{ localStorage.setItem(profileImageKey,data); }catch{ toast("Foto terlalu besar untuk penyimpanan browser.",'error'); return; }
+  updateAccountUI(); closeModal(); toast("✅ Foto profil berhasil disesuaikan.");
+}
+
 /* =========================================
    PROFILE
 ========================================= */
@@ -2376,14 +2566,14 @@ function openProfile(){
           class="small-btn"
           onclick="chooseProfileImage()"
         >
-          🖼️ Customize Image
+          🖼️ ${T.choose}
         </button>
 
         <button
           class="small-btn danger"
           onclick="removeProfileImage()"
         >
-          🗑️ Hapus
+          🗑️ ${T.remove}
         </button>
 
       </div>
@@ -2529,29 +2719,7 @@ function handleProfileImage(event){
     const result =
       reader.result;
 
-    localStorage.setItem(
-      profileImageKey,
-      result
-    );
-
-    const preview =
-      $("profilePreview");
-
-    if(preview){
-
-      preview.innerHTML =
-        `<img
-          src="${result}"
-          alt="Foto profil"
-        >`;
-
-    }
-
-    updateAccountUI();
-
-    toast(
-      "🖼️ Foto profil berhasil diganti."
-    );
+    openCropEditor(result);
 
   };
 
@@ -2713,6 +2881,18 @@ function openSettings(){
 
 
     <div class="setting-row">
+      <div class="setting-info">
+        <b>⚡ ${T.performance}</b>
+        <span>${T.performanceDesc}</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" ${localStorage.getItem("tc_performance") === "1" ? "checked" : ""} onchange="togglePerformance(this.checked)">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+
+    <div class="setting-row">
 
       <div class="setting-info">
 
@@ -2731,27 +2911,12 @@ function openSettings(){
         onchange="setLanguage(this.value);openSettings()"
       >
 
-        <option
-          value="id"
-          ${
-            currentLanguage === "id"
-              ? "selected"
-              : ""
-          }
-        >
-          🇮🇩 Indonesia
-        </option>
-
-        <option
-          value="en"
-          ${
-            currentLanguage === "en"
-              ? "selected"
-              : ""
-          }
-        >
-          🇬🇧 English
-        </option>
+        <option value="id" ${currentLanguage === "id" ? "selected" : ""}>🇮🇩 Indonesia</option>
+        <option value="en" ${currentLanguage === "en" ? "selected" : ""}>🇬🇧 English</option>
+        <option value="ms" ${currentLanguage === "ms" ? "selected" : ""}>🇲🇾 Melayu</option>
+        <option value="zh" ${currentLanguage === "zh" ? "selected" : ""}>🇨🇳 中文</option>
+        <option value="es" ${currentLanguage === "es" ? "selected" : ""}>🇪🇸 Español</option>
+        <option value="ar" ${currentLanguage === "ar" ? "selected" : ""}>🇸🇦 العربية</option>
 
       </select>
 
@@ -2831,6 +2996,17 @@ function openSettings(){
   `);
 }
 
+
+function togglePerformance(enabled){
+  document.body.classList.toggle("performance",Boolean(enabled));
+  localStorage.setItem("tc_performance",enabled ? "1" : "0");
+  toast(enabled ? "⚡ Mode ringan aktif." : "✨ Efek visual aktif kembali.");
+}
+
+function loadPerformance(){
+  const enabled=localStorage.getItem("tc_performance")==="1";
+  document.body.classList.toggle("performance",enabled);
+}
 
 function clearLocalProfile(){
 
@@ -4461,6 +4637,7 @@ document.addEventListener(
 async function boot(){
 
   loadTheme();
+loadPerformance();
 
   T =
     translations[

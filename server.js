@@ -17,6 +17,7 @@ const app = express();
 ========================================================= */
 
 const PORT = Number(process.env.PORT || 3000);
+const DB_PATH = String(process.env.DB_PATH || path.join(__dirname, 'data.db')).trim();
 const SESSION_DAYS = 30;
 const CODE_RESERVATION_MINUTES = 15;
 
@@ -46,9 +47,7 @@ app.use(
    DATABASE
 ========================================================= */
 
-const db = new Database(
-  path.join(__dirname, 'data.db')
-);
+const db = new Database(DB_PATH);
 
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
@@ -341,18 +340,16 @@ function admin(
       req.headers['x-admin-key'] || ''
     ).trim();
 
-  if(
-    !configuredKey ||
-    !receivedKey ||
-    receivedKey !== configuredKey
-  ){
+  if(!configuredKey || !receivedKey){
+    return jsonError(res,401,'Unauthorized');
+  }
 
-    return jsonError(
-      res,
-      401,
-      'Unauthorized'
-    );
+  const a = Buffer.from(receivedKey);
+  const b = Buffer.from(configuredKey);
+  const same = a.length === b.length && crypto.timingSafeEqual(a,b);
 
+  if(!same){
+    return jsonError(res,401,'Unauthorized');
   }
 
   next();
@@ -362,6 +359,11 @@ function admin(
 /* =========================================================
    HEALTH / CONFIG
 ========================================================= */
+
+app.get('/api/admin/check', admin, (req,res) => {
+  res.json({ok:true});
+});
+
 
 app.get(
   '/health',
