@@ -47,3 +47,10 @@ Webhook wajib memakai HTTPS di server publik. Jangan pernah menaruh Server Key d
 
 ## Batasan versi ini
 Google/Apple login belum dibuat; versi ini menggunakan email/password. Supplier API otomatis juga belum dibuat karena endpoint/SKU supplier belum diberikan. Itu perlu integrasi terpisah berdasarkan API resmi supplier.
+
+## Railway Admin Key
+Set this exact environment variable in Railway Variables:
+
+`ADMIN_KEY`
+
+The value must exactly match the key entered on `/admin`. Do not put the secret in frontend source code or share it publicly. After changing Variables, redeploy the service.
