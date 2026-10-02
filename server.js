@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import Database from 'better-sqlite3';
 import midtransClient from 'midtrans-client';
 import crypto from 'crypto';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -18,6 +19,9 @@ const app = express();
 
 const PORT = Number(process.env.PORT || 3000);
 const DB_PATH = String(process.env.DB_PATH || path.join(__dirname, 'data.db')).trim();
+
+// Make sure a custom Railway volume/database directory exists.
+fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 const SESSION_DAYS = 30;
 const CODE_RESERVATION_MINUTES = 15;
 

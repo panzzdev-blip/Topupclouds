@@ -1099,8 +1099,15 @@ async function saveKey(){
 
   }
 
-  adminKey =
-    value;
+  const previousKey = adminKey;
+  adminKey = value;
+
+  try{
+    await api('/api/admin/check');
+  }catch(error){
+    adminKey = previousKey;
+    throw error;
+  }
 
   localStorage.setItem(
     'tc_admin_key',
