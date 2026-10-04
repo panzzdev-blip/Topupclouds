@@ -485,6 +485,22 @@ tr:last-child td{
   }
 
 }
+
+
+.btn-danger{
+  border:1px solid rgba(255,100,100,.35);
+  background:rgba(255,70,70,.12);
+  color:#ff8f8f;
+  border-radius:12px;
+  padding:9px 13px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn-danger:active{
+  transform:scale(.98);
+}
+
 </style>
 </head>
 
@@ -1466,6 +1482,10 @@ function renderProducts(
   products
 ){
 
+  window.__tcProducts = Array.isArray(products)
+    ? products
+    : [];
+
   const container =
     $('productTable');
 
@@ -1498,6 +1518,7 @@ function renderProducts(
         <th>Durasi</th>
         <th>Harga</th>
         <th>Aktif</th>
+        <th>Aksi</th>
 
       </tr>
 
@@ -1575,6 +1596,15 @@ function renderProducts(
 
         </span>
 
+      </td>
+
+      <td>
+        <button
+          type="button"
+          class="btn-danger"
+          onclick="deleteProduct(${Number(product.id)})">
+          Hapus
+        </button>
       </td>
 
     `;
@@ -1917,6 +1947,53 @@ async function addProduct(){
       button,
       false,
       'Tambah'
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   DELETE PRODUCT
+========================================================= */
+
+async function deleteProduct(productId){
+
+  const product = (window.__tcProducts || []).find(
+    item => Number(item.id) === Number(productId)
+  );
+
+  const label = product
+    ? `${product.provider || '-'} — ${product.name || '-'} — ${product.duration_days || 0}H`
+    : `ID ${productId}`;
+
+  const confirmed = confirm(
+    `Hapus produk ini?\n\n${label}\n\nStok Redeem Code yang terkait juga akan ikut terhapus.\n\nProduk yang sudah punya riwayat order tidak dapat dihapus.`
+  );
+
+  if(!confirmed) return;
+
+  try{
+
+    await api(
+      `/api/admin/products/${Number(productId)}`,
+      {method:'DELETE'}
+    );
+
+    toast(
+      'Produk berhasil dihapus.',
+      'success'
+    );
+
+    await load();
+
+  }catch(error){
+
+    toast(
+      error.message ||
+      'Gagal menghapus produk.',
+      'error'
     );
 
   }
