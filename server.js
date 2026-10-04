@@ -141,6 +141,17 @@ db.exec(`
     ON orders(midtrans_transaction_id);
 `);
 
+// Order-contact / fulfillment migrations for existing databases.
+const orderColumns = db.prepare(`PRAGMA table_info(orders)`).all().map(x => x.name);
+const addOrderColumn = (name, sql) => { if (!orderColumns.includes(name)) db.exec(`ALTER TABLE orders ADD COLUMN ${sql}`); };
+addOrderColumn('customer_email', 'customer_email TEXT');
+addOrderColumn('customer_phone', 'customer_phone TEXT');
+addOrderColumn('delivery_channel', "delivery_channel TEXT NOT NULL DEFAULT 'email'");
+addOrderColumn('fulfillment_status', "fulfillment_status TEXT NOT NULL DEFAULT 'pending_payment'");
+addOrderColumn('delivery_note', 'delivery_note TEXT');
+db.prepare(`UPDATE orders SET fulfillment_status='completed' WHERE payment_status='paid' AND redeem_code IS NOT NULL AND fulfillment_status='pending_payment'`).run();
+db.prepare(`UPDATE orders SET fulfillment_status='failed' WHERE payment_status IN ('expire','cancel','deny','failure') AND fulfillment_status='pending_payment'`).run();
+
 
 /* =========================================================
    MIDTRANS
@@ -175,6 +186,11 @@ const snap =
 /* =========================================================
    HELPERS
 ========================================================= */
+
+const normalizeEmail = value => String(value || '').trim().toLowerCase();
+const normalizePhone = value => { let v = String(value || '').replace(/[^0-9+]/g, ''); if (v.startsWith('+')) v=v.slice(1); if (v.startsWith('0')) v='62'+v.slice(1); return v; };
+const validEmail = value => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(value));
+const validPhone = value => /^62[0-9]{9,13}$/.test(normalizePhone(value));
 
 const safeEmail = value =>
   String(value || '')
@@ -846,6 +862,13 @@ app.post(
           req.body?.productId
         );
 
+      const customerEmail = normalizeEmail(req.body?.customerEmail);
+      const customerPhone = normalizePhone(req.body?.customerPhone);
+      const deliveryChannel = String(req.body?.deliveryChannel || 'email').toLowerCase();
+      if (!validEmail(customerEmail)) return jsonError(res, 400, 'Email penerima tidak valid');
+      if (!validPhone(customerPhone)) return jsonError(res, 400, 'Nomor telepon tidak valid. Gunakan format 08xxxxxxxxxx atau 628xxxxxxxxxx');
+      if (!['email','phone'].includes(deliveryChannel)) return jsonError(res, 400, 'Pilihan pengiriman kode tidak valid');
+
       if(
         !Number.isInteger(
           productId
@@ -972,20 +995,13 @@ app.post(
        */
       db.prepare(`
         INSERT INTO orders(
-          id,
-          user_id,
-          product_id,
-          code_id,
-          amount,
-          payment_status
+          id, user_id, product_id, code_id, amount, payment_status,
+          customer_email, customer_phone, delivery_channel, fulfillment_status
         )
-        VALUES(?,?,?,?,?,'pending')
+        VALUES(?,?,?,?,?,'pending',?,?,?,'pending_payment')
       `).run(
-        orderId,
-        req.userId,
-        product.id,
-        reserved.id,
-        product.price
+        orderId, req.userId, product.id, reserved.id, product.price,
+        customerEmail, customerPhone, deliveryChannel
       );
 
 
@@ -1333,9 +1349,11 @@ const markPaid =
         UPDATE orders
         SET
           payment_status='paid',
+          fulfillment_status='processing',
           redeem_code=?,
           midtrans_transaction_id=?,
-          paid_at=CURRENT_TIMESTAMP
+          paid_at=CURRENT_TIMESTAMP,
+          delivery_note='Pembayaran terverifikasi. Kode sedang diproses untuk dikirim.'
         WHERE id=?
       `).run(
         code.redeem_code,
@@ -1352,6 +1370,38 @@ const markPaid =
 
     }
   );
+
+
+/* =========================================================
+   CODE DELIVERY
+========================================================= */
+
+async function deliverCode(orderId){
+  const order = db.prepare(`SELECT o.*, p.name AS product_name FROM orders o JOIN products p ON p.id=o.product_id WHERE o.id=?`).get(orderId);
+  if (!order || order.fulfillment_status !== 'processing' || !order.redeem_code) return;
+  let delivered = false; let note = '';
+
+  if (order.delivery_channel === 'email' && process.env.RESEND_API_KEY && process.env.EMAIL_FROM) {
+    try {
+      const r = await fetch('https://api.resend.com/emails', {
+        method:'POST', headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},
+        body:JSON.stringify({from:process.env.EMAIL_FROM,to:[order.customer_email],subject:`Redeem Code Top up Clouds - ${order.product_name}`,html:`<div style="font-family:Arial,sans-serif"><h2>Top up Clouds</h2><p>Pembayaran pesanan <b>${order.id}</b> berhasil.</p><p>Produk: ${order.product_name}</p><p style="font-size:22px;font-weight:bold;letter-spacing:2px">${order.redeem_code}</p><p>Jika email ini tidak ditemukan, kode tetap bisa dilihat di menu Pesanan.</p></div>`})
+      });
+      delivered = r.ok; if (!r.ok) note=`Email gagal dikirim (${r.status}). Kode tetap tersedia di Pesanan.`;
+    } catch { note='Email gagal dikirim. Kode tetap tersedia di Pesanan.'; }
+  }
+
+  if (order.delivery_channel === 'phone' && process.env.FONNTE_TOKEN) {
+    try {
+      const body=new URLSearchParams({target:order.customer_phone,message:`Top up Clouds\nPesanan ${order.id} berhasil.\nProduk: ${order.product_name}\nRedeem Code: ${order.redeem_code}`});
+      const r=await fetch('https://api.fonnte.com/send',{method:'POST',headers:{Authorization:process.env.FONNTE_TOKEN,'Content-Type':'application/x-www-form-urlencoded'},body});
+      delivered=r.ok; if(!r.ok) note=`Pengiriman ke nomor gagal (${r.status}). Kode tetap tersedia di Pesanan.`;
+    } catch { note='Pengiriman ke nomor gagal. Kode tetap tersedia di Pesanan.'; }
+  }
+
+  if (!delivered && !note) note=order.delivery_channel==='email' ? 'Email delivery belum dikonfigurasi. Kode tetap tersedia di menu Pesanan.' : 'Pengiriman nomor belum dikonfigurasi. Kode tetap tersedia di menu Pesanan.';
+  db.prepare(`UPDATE orders SET fulfillment_status='completed', delivery_note=? WHERE id=?`).run(note || 'Kode berhasil dikirim.',orderId);
+}
 
 
 /* =========================================================
@@ -1443,10 +1493,10 @@ app.post(
 
       if(paid){
 
-        markPaid(
-          notification,
-          order
-        );
+        const paidResult = markPaid(notification, order);
+        if (paidResult?.ok && !paidResult?.alreadyPaid) {
+          deliverCode(order.id).catch(err => console.error('Delivery error:', err));
+        }
 
       }
 
@@ -1468,6 +1518,7 @@ app.post(
             UPDATE orders
             SET
               payment_status=?,
+              fulfillment_status='failed',
               midtrans_transaction_id=?
             WHERE id=?
               AND payment_status != 'paid'
@@ -1564,6 +1615,11 @@ app.get(
             o.redeem_code,
             o.created_at,
             o.paid_at,
+            o.customer_email,
+            o.customer_phone,
+            o.delivery_channel,
+            o.fulfillment_status,
+            o.delivery_note,
             p.provider,
             p.name,
             p.duration_days
@@ -1634,6 +1690,11 @@ app.get(
             o.redeem_code,
             o.created_at,
             o.paid_at,
+            o.customer_email,
+            o.customer_phone,
+            o.delivery_channel,
+            o.fulfillment_status,
+            o.delivery_note,
             p.provider,
             p.name,
             p.duration_days
