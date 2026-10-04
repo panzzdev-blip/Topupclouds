@@ -61,7 +61,27 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    oauth_provider TEXT,
+    oauth_subject TEXT,
+    display_name TEXT,
+    avatar_url TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS oauth_states(
+    state_hash TEXT PRIMARY KEY,
+    provider TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS password_resets(
+    token_hash TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    used_at TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
   );
 
   CREATE TABLE IF NOT EXISTS sessions(
@@ -151,6 +171,17 @@ addOrderColumn('fulfillment_status', "fulfillment_status TEXT NOT NULL DEFAULT '
 addOrderColumn('delivery_note', 'delivery_note TEXT');
 db.prepare(`UPDATE orders SET fulfillment_status='completed' WHERE payment_status='paid' AND redeem_code IS NOT NULL AND fulfillment_status='pending_payment'`).run();
 db.prepare(`UPDATE orders SET fulfillment_status='failed' WHERE payment_status IN ('expire','cancel','deny','failure') AND fulfillment_status='pending_payment'`).run();
+
+// Auth migrations for existing databases.
+const userColumns = db.prepare(`PRAGMA table_info(users)`).all().map(x => x.name);
+const addUserColumn = (name, sql) => { if (!userColumns.includes(name)) db.exec(`ALTER TABLE users ADD COLUMN ${sql}`); };
+addUserColumn('oauth_provider', 'oauth_provider TEXT');
+addUserColumn('oauth_subject', 'oauth_subject TEXT');
+addUserColumn('display_name', 'display_name TEXT');
+addUserColumn('avatar_url', 'avatar_url TEXT');
+db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider,oauth_subject) WHERE oauth_provider IS NOT NULL AND oauth_subject IS NOT NULL`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id)`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_password_resets_expiry ON password_resets(expires_at)`);
 
 
 /* =========================================================
@@ -288,13 +319,19 @@ function auth(
       req.headers.authorization || ''
     );
 
-  const bearer =
+  let bearer =
     authorization
       .replace(
         /^Bearer\s+/i,
         ''
       )
       .trim();
+
+  if(!bearer){
+    const cookieHeader = String(req.headers.cookie || '');
+    const match = cookieHeader.match(/(?:^|;\s*)tc_session=([^;]+)/);
+    if(match) bearer = decodeURIComponent(match[1]);
+  }
 
   if(!bearer){
 
@@ -466,6 +503,123 @@ app.get(
 
 
 /* =========================================================
+   AUTH HELPERS / GOOGLE OAUTH / PASSWORD RESET
+========================================================= */
+
+function sessionForUser(userId){
+  const token = newToken();
+  const expiresAt = Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000;
+  db.prepare(`INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)`).run(hashToken(token), userId, expiresAt);
+  return { token, expiresAt };
+}
+
+function baseUrl(req){
+  return String(process.env.APP_URL || `${req.protocol}://${req.get('host')}`).replace(/\/$/,'');
+}
+
+function setSessionCookie(res, token){
+  const secure = process.env.NODE_ENV === 'production' || process.env.MIDTRANS_IS_PRODUCTION === 'true';
+  res.setHeader('Set-Cookie', `tc_session=${encodeURIComponent(token)}; Max-Age=${SESSION_DAYS*24*60*60}; Path=/; HttpOnly; SameSite=Lax${secure?'; Secure':''}`);
+}
+
+app.get('/api/me', auth, (req,res) => {
+  const user = db.prepare(`SELECT id,email,display_name,avatar_url,oauth_provider FROM users WHERE id=?`).get(req.userId);
+  if(!user) return jsonError(res,404,'Akun tidak ditemukan');
+  res.json({ok:true,user});
+});
+
+app.get('/api/auth/google', (req,res) => {
+  const clientId = String(process.env.GOOGLE_CLIENT_ID || '').trim();
+  const redirectUri = String(process.env.GOOGLE_REDIRECT_URI || `${baseUrl(req)}/api/auth/google/callback`).trim();
+  if(!clientId) return jsonError(res,503,'Google Login belum dikonfigurasi di server');
+  const state = newToken();
+  db.prepare(`INSERT INTO oauth_states(state_hash,provider,expires_at) VALUES(?,?,?)`).run(hashToken(state),'google',Date.now()+10*60*1000);
+  const params = new URLSearchParams({client_id:clientId,redirect_uri:redirectUri,response_type:'code',scope:'openid email profile',state,access_type:'online',prompt:'select_account'});
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+});
+
+app.get('/api/auth/google/callback', async (req,res) => {
+  try{
+    const code = String(req.query.code || '');
+    const state = String(req.query.state || '');
+    if(!code || !state) return res.redirect('/?oauth_error=missing');
+    const stateHash = hashToken(state);
+    const stateRow = db.prepare(`SELECT * FROM oauth_states WHERE state_hash=? AND provider='google' AND expires_at>?`).get(stateHash,Date.now());
+    db.prepare(`DELETE FROM oauth_states WHERE state_hash=?`).run(stateHash);
+    if(!stateRow) return res.redirect('/?oauth_error=state');
+    const clientId = String(process.env.GOOGLE_CLIENT_ID || '').trim();
+    const clientSecret = String(process.env.GOOGLE_CLIENT_SECRET || '').trim();
+    const redirectUri = String(process.env.GOOGLE_REDIRECT_URI || `${baseUrl(req)}/api/auth/google/callback`).trim();
+    if(!clientId || !clientSecret) return res.redirect('/?oauth_error=config');
+    const tokenResp = await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({code,client_id:clientId,client_secret:clientSecret,redirect_uri:redirectUri,grant_type:'authorization_code'})});
+    const tokenData = await tokenResp.json();
+    if(!tokenResp.ok || !tokenData.access_token) throw new Error('Google token exchange failed');
+    const profileResp = await fetch('https://openidconnect.googleapis.com/v1/userinfo',{headers:{Authorization:`Bearer ${tokenData.access_token}`}});
+    const profile = await profileResp.json();
+    if(!profileResp.ok || !profile.sub || !profile.email) throw new Error('Google profile unavailable');
+    const email = normalizeEmail(profile.email);
+    let user = db.prepare(`SELECT * FROM users WHERE oauth_provider='google' AND oauth_subject=?`).get(String(profile.sub));
+    if(!user) user = db.prepare(`SELECT * FROM users WHERE email=?`).get(email);
+    if(user){
+      db.prepare(`UPDATE users SET oauth_provider='google',oauth_subject=?,display_name=?,avatar_url=? WHERE id=?`).run(String(profile.sub),String(profile.name||''),String(profile.picture||''),user.id);
+    } else {
+      const randomPassword = await bcrypt.hash(newToken()+newToken(),12);
+      const result = db.prepare(`INSERT INTO users(email,password_hash,oauth_provider,oauth_subject,display_name,avatar_url) VALUES(?,?,?,?,?,?)`).run(email,randomPassword,'google',String(profile.sub),String(profile.name||''),String(profile.picture||''));
+      user = {id:result.lastInsertRowid,email};
+    }
+    const session = sessionForUser(user.id);
+    setSessionCookie(res,session.token);
+    res.redirect('/#oauth_token='+encodeURIComponent(session.token));
+  }catch(error){
+    console.error('Google OAuth error:',error.message);
+    res.redirect('/?oauth_error=failed');
+  }
+});
+
+app.post('/api/forgot-password', async (req,res) => {
+  const email = normalizeEmail(req.body?.email);
+  const publicMessage = 'Jika email terdaftar, link reset password sudah dikirim. Cek Inbox/Spam.';
+  if(!validEmail(email)) return res.json({ok:true,message:publicMessage});
+  try{
+    const user = db.prepare(`SELECT id,email FROM users WHERE email=?`).get(email);
+    if(!user) return res.json({ok:true,message:publicMessage});
+    if(!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM){
+      console.warn('Password reset requested but RESEND_API_KEY/EMAIL_FROM is not configured.');
+      return res.json({ok:true,message:publicMessage});
+    }
+    db.prepare(`DELETE FROM password_resets WHERE user_id=? OR expires_at<=?`).run(user.id,Date.now());
+    const rawToken = newToken()+newToken();
+    const tokenHash = hashToken(rawToken);
+    db.prepare(`INSERT INTO password_resets(token_hash,user_id,expires_at) VALUES(?,?,?)`).run(tokenHash,user.id,Date.now()+30*60*1000);
+    const link = `${baseUrl(req)}/?reset_token=${encodeURIComponent(rawToken)}`;
+    const r = await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:process.env.EMAIL_FROM,to:[email],subject:'Reset Password Top up Clouds',html:`<div style="font-family:Arial,sans-serif;line-height:1.6"><h2>Top up Clouds</h2><p>Klik tombol berikut untuk membuat password baru. Link berlaku 30 menit.</p><p><a href="${link}" style="display:inline-block;padding:12px 18px;background:#64f6a5;color:#06100c;text-decoration:none;border-radius:8px;font-weight:bold">Reset Password</a></p><p>Jika kamu tidak meminta reset password, abaikan email ini.</p></div>`})});
+    if(!r.ok) console.error('Resend reset email failed:',r.status,await r.text());
+    return res.json({ok:true,message:publicMessage});
+  }catch(error){
+    console.error('Forgot password error:',error.message);
+    return res.json({ok:true,message:publicMessage});
+  }
+});
+
+app.post('/api/reset-password', async (req,res) => {
+  const token = String(req.body?.token || '').trim();
+  const password = String(req.body?.password || '');
+  if(token.length < 32 || password.length < 8) return jsonError(res,400,'Token reset tidak valid atau password minimal 8 karakter.');
+  const row = db.prepare(`SELECT * FROM password_resets WHERE token_hash=? AND used_at IS NULL AND expires_at>?`).get(hashToken(token),Date.now());
+  if(!row) return jsonError(res,400,'Link reset password sudah tidak berlaku. Minta link baru.');
+  const passwordHash = await bcrypt.hash(password,12);
+  db.transaction(()=>{
+    db.prepare(`UPDATE users SET password_hash=? WHERE id=?`).run(passwordHash,row.user_id);
+    db.prepare(`UPDATE password_resets SET used_at=CURRENT_TIMESTAMP WHERE token_hash=?`).run(hashToken(token));
+    db.prepare(`DELETE FROM sessions WHERE user_id=?`).run(row.user_id);
+  })();
+  const session = sessionForUser(row.user_id);
+  setSessionCookie(res,session.token);
+  const user = db.prepare(`SELECT email FROM users WHERE id=?`).get(row.user_id);
+  res.json({ok:true,token:session.token,email:user?.email||''});
+});
+
+/* =========================================================
    REGISTER
 ========================================================= */
 
@@ -531,33 +685,12 @@ app.post(
           passwordHash
         );
 
-      const token =
-        newToken();
-
-      const expiresAt =
-        Date.now() +
-        SESSION_DAYS *
-        24 *
-        60 *
-        60 *
-        1000;
-
-      db.prepare(`
-        INSERT INTO sessions(
-          token_hash,
-          user_id,
-          expires_at
-        )
-        VALUES(?,?,?)
-      `).run(
-        hashToken(token),
-        result.lastInsertRowid,
-        expiresAt
-      );
+      const session = sessionForUser(result.lastInsertRowid);
+      setSessionCookie(res,session.token);
 
       res.json({
         ok:true,
-        token,
+        token:session.token,
         email
       });
 
@@ -649,33 +782,12 @@ app.post(
 
       }
 
-      const token =
-        newToken();
-
-      const expiresAt =
-        Date.now() +
-        SESSION_DAYS *
-        24 *
-        60 *
-        60 *
-        1000;
-
-      db.prepare(`
-        INSERT INTO sessions(
-          token_hash,
-          user_id,
-          expires_at
-        )
-        VALUES(?,?,?)
-      `).run(
-        hashToken(token),
-        user.id,
-        expiresAt
-      );
+      const session = sessionForUser(user.id);
+      setSessionCookie(res,session.token);
 
       res.json({
         ok:true,
-        token,
+        token:session.token,
         email:user.email
       });
 
@@ -717,6 +829,7 @@ app.post(
         )
       );
 
+      res.setHeader('Set-Cookie','tc_session=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax');
       res.json({
         ok:true
       });
