@@ -1672,7 +1672,7 @@ function renderOrders(
       <tr>
 
         <th>Order</th>
-        <th>Email</th>
+        <th>Kontak</th>
         <th>Produk</th>
         <th>Status</th>
         <th>Kode</th>
@@ -1698,16 +1698,13 @@ function renderOrders(
         'tr'
       );
 
-    const status =
-      String(
-        order.payment_status ||
-        ''
-      ).toLowerCase();
+    const status = String(order.fulfillment_status || order.payment_status || '').toLowerCase();
 
     let badgeClass =
       'badge-yellow';
 
     if(
+      status === 'completed' ||
       status === 'paid' ||
       status === 'settlement' ||
       status === 'success'
@@ -1740,10 +1737,8 @@ function renderOrders(
       </td>
 
       <td>
-        ${escapeHTML(
-          order.email ||
-          '-'
-        )}
+        <div>${escapeHTML(order.customer_email || order.email || '-')}</div>
+        <small>${escapeHTML(order.customer_phone || '-')}</small>
       </td>
 
       <td>
@@ -1758,8 +1753,7 @@ function renderOrders(
         <span class="badge ${badgeClass}">
 
           ${escapeHTML(
-            order.payment_status ||
-            '-'
+            order.fulfillment_status || order.payment_status || '-'
           )}
 
         </span>

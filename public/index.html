@@ -1252,6 +1252,8 @@ footer{
   text-align:center;
 }
 
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 12px}.step3{padding:10px 7px;border:1px solid #ffffff1c;border-radius:12px;text-align:center;color:#8fa8b7;font-size:11px;font-weight:800}.step3 .num{display:block;width:25px;height:25px;line-height:25px;border-radius:50%;margin:0 auto 6px;background:#ffffff10}.step3.active{border-color:#72eec0;color:#72eec0;background:#72eec00d}.step3.done{border-color:#72dcff;color:#72dcff}.contact-grid{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}.contact-grid label{font-size:12px;color:#aac2cf;font-weight:700}.contact-grid input{width:100%;margin-top:6px;padding:13px;border-radius:11px;border:1px solid #ffffff20;background:#03111d;color:#fff;outline:none}.contact-grid input:focus{border-color:#72dcff}.delivery-choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.delivery-choice label{border:1px solid #ffffff20;border-radius:11px;padding:11px;cursor:pointer;background:#ffffff06}.delivery-choice input{accent-color:#72eec0;margin-right:6px}.delivery-tip{font-size:11px;line-height:1.45;color:#9bb5c3;margin:8px 0}.order-note{font-size:11px;color:#9bb5c3;line-height:1.45;margin-top:8px}.status-completed{color:#72eec0;border-color:#72eec066}.status-processing{color:#72dcff;border-color:#72dcff66}.status-pending{color:#ffd66b;border-color:#ffd66b66}.status-failed{color:#ff8d8d;border-color:#ff8d8d66}.
+
 .status{
   display:inline-block;
   border:1px solid #ffffff22;
@@ -3850,111 +3852,34 @@ function checkout(id){
 function renderCheckout(){
 
   showModal(`
-
     <div class="modal-head">
-
-      <h3>
-        ${
-          currentLanguage === "en"
-            ? "Confirm order"
-            : "Konfirmasi pesanan"
-        }
-      </h3>
-
-      <button
-        class="x"
-        onclick="closeModal()"
-      >
-        ×
-      </button>
-
+      <h3>${currentLanguage === "en" ? "Checkout" : "Checkout pesanan"}</h3>
+      <button class="x" onclick="closeModal()">×</button>
     </div>
 
+    <p class="sub">${escapeHTML(selected.name)} · ${Number(selected.duration_days)} hari · <b>${rupiah(selected.price)}</b></p>
 
-    <p class="sub">
-
-      ${escapeHTML(
-        selected.name
-      )}
-
-      ·
-
-      ${Number(
-        selected.duration_days
-      )}
-      hari
-
-    </p>
-
-
-    <div class="orderline">
-
-      <span>
-        Provider
-      </span>
-
-      <b>
-
-        ${escapeHTML(
-          providerName(
-            selected.provider
-          )
-        )}
-
-      </b>
-
+    <div class="steps3">
+      <div class="step3 active"><span class="num">1</span>${currentLanguage === "en" ? "Waiting payment" : "Menunggu pembayaran"}</div>
+      <div class="step3"><span class="num">2</span>${currentLanguage === "en" ? "Processing" : "Sedang proses"}</div>
+      <div class="step3"><span class="num">3</span>${currentLanguage === "en" ? "Completed" : "Selesai"}</div>
     </div>
 
-
-    <div class="orderline">
-
-      <span>
-        Total
-      </span>
-
-      <b>
-        ${rupiah(
-          selected.price
-        )}
-      </b>
-
+    <div class="contact-grid">
+      <label>Email penerima *<input id="checkoutEmail" type="email" autocomplete="email" placeholder="nama@email.com" value="${escapeHTML(localStorage.getItem(userEmailKey) || '')}"></label>
+      <label>Nomor telepon *<input id="checkoutPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx"></label>
     </div>
 
-
-    <div class="note">
-
-      ${
-        currentLanguage === "en"
-          ? "Available payment methods will be shown directly by Midtrans. Do not close the page before selecting a payment method."
-          : "Metode pembayaran tersedia ditampilkan langsung oleh Midtrans. Jangan tutup halaman sebelum memilih metode pembayaran."
-      }
-
+    <div class="delivery-tip">📩 Kami menyarankan <b>email</b> agar Redeem Code lebih mudah ditemukan. Pilih nomor jika kamu ingin kode dikirim ke WhatsApp/nomor yang sudah dikonfigurasi admin.</div>
+    <div class="delivery-choice">
+      <label><input type="radio" name="deliveryChannel" value="email" checked> Email</label>
+      <label><input type="radio" name="deliveryChannel" value="phone"> Nomor</label>
     </div>
 
+    <div class="note">${currentLanguage === "en" ? "Payment is verified by the server. After payment succeeds, the order moves to Processing and then Completed when the code is prepared." : "Pembayaran diverifikasi oleh server. Setelah pembayaran berhasil, pesanan masuk ke Sedang Proses lalu Selesai saat kode sudah diproses."}</div>
 
-    <button
-      class="primary"
-      onclick="createPayment()"
-    >
-
-      ${
-        currentLanguage === "en"
-          ? "Pay now"
-          : "Bayar sekarang"
-      }
-
-    </button>
-
-
-    <button
-      class="secondary"
-      onclick="closeModal()"
-    >
-
-      ${T.close}
-
-    </button>
-
+    <button class="primary" onclick="createPayment()">${currentLanguage === "en" ? "Continue to payment" : "Lanjut ke pembayaran"}</button>
+    <button class="secondary" onclick="closeModal()">${T.close}</button>
   `);
 }
 
@@ -4071,7 +3996,10 @@ async function createPayment(){
           method:"POST",
 
           body:JSON.stringify({
-            productId:selected.id
+            productId:selected.id,
+            customerEmail:$('checkoutEmail')?.value || '',
+            customerPhone:$('checkoutPhone')?.value || '',
+            deliveryChannel:document.querySelector('input[name="deliveryChannel"]:checked')?.value || 'email'
           })
         }
       );
@@ -4098,49 +4026,25 @@ async function createPayment(){
 
         onSuccess:() => {
 
-          showPaymentResult(
-            data.orderId,
-
-            currentLanguage === "en"
-              ? "Payment received. The code will appear after the server processes the Midtrans notification."
-              : "Pembayaran diterima. Kode akan muncul setelah server memproses notifikasi Midtrans."
-          );
+          showPaymentResult(data.orderId, 'processing');
 
         },
 
         onPending:() => {
 
-          showPaymentResult(
-            data.orderId,
-
-            currentLanguage === "en"
-              ? "Payment is still pending. Check Orders for the latest status."
-              : "Pembayaran masih menunggu. Cek Pesanan untuk melihat status terbaru."
-          );
+          showPaymentResult(data.orderId, 'pending_payment');
 
         },
 
         onError:() => {
 
-          showPaymentResult(
-            data.orderId,
-
-            currentLanguage === "en"
-              ? "Payment failed. Try again or use another payment method."
-              : "Pembayaran gagal. Coba lagi atau gunakan metode pembayaran lain."
-          );
+          showPaymentResult(data.orderId, 'failed');
 
         },
 
         onClose:() => {
 
-          showPaymentResult(
-            data.orderId,
-
-            currentLanguage === "en"
-              ? "Checkout closed. If you have not paid, the order remains pending until it expires."
-              : "Checkout ditutup. Jika belum membayar, order tetap berstatus pending sampai kedaluwarsa."
-          );
+          showPaymentResult(data.orderId, 'pending_payment');
 
         }
 
@@ -4161,50 +4065,39 @@ async function createPayment(){
    PAYMENT RESULT
 ========================================= */
 
-function showPaymentResult(
-  id,
-  message
-){
+function statusLabel(status){
+  const map={pending_payment:'Menunggu pembayaran',processing:'Sedang Proses',completed:'Selesai',failed:'Gagal'};
+  return map[status] || status || 'Menunggu pembayaran';
+}
 
-  showModal(`
+function renderOrderSteps(status){
+  const n = status === 'completed' ? 3 : status === 'processing' ? 2 : status === 'failed' ? 0 : 1;
+  return `<div class="steps3">${['Menunggu pembayaran','Sedang Proses','Selesai'].map((x,i)=>`<div class="step3 ${i+1<n?'done':''} ${i+1===n?'active':''}"><span class="num">${i+1}</span>${x}</div>`).join('')}</div>`;
+}
 
-    <div class="modal-head">
-
-      <h3>
-        Order ${escapeHTML(id)}
-      </h3>
-
-      <button
-        class="x"
-        onclick="closeModal()"
-      >
-        ×
-      </button>
-
-    </div>
-
-    <p class="sub">
-
-      ${escapeHTML(
-        message
-      )}
-
-    </p>
-
-    <button
-      class="primary"
-      onclick="openOrders()"
-    >
-
-      ${
-        currentLanguage === "en"
-          ? "Check orders"
-          : "Cek pesanan"
+async function pollOrderStatus(id){
+  for(let i=0;i<20;i++){
+    await new Promise(r=>setTimeout(r,3000));
+    try{
+      const o=await api('/api/orders/'+encodeURIComponent(id));
+      if(o.fulfillment_status==='completed' || o.fulfillment_status==='failed'){
+        showPaymentResult(id,o.fulfillment_status);
+        return;
       }
+    }catch{}
+  }
+}
 
-    </button>
-
+function showPaymentResult(id,status){
+  const message = status==='completed' ? 'Pesanan selesai. Redeem Code sudah tersedia.' : status==='processing' ? 'Pembayaran berhasil. Pesanan sedang diproses dan kode sedang dikirim.' : status==='failed' ? 'Pesanan gagal. Jika pembayaran terpotong, hubungi admin.' : 'Pesanan menunggu pembayaran.';
+  showModal(`
+    <div class="modal-head"><h3>Order ${escapeHTML(id)}</h3><button class="x" onclick="closeModal()">×</button></div>
+    ${renderOrderSteps(status)}
+    <p class="sub">${message}</p>
+    ${status==='completed' ? '<div class="note">📩 Kode juga akan dikirim ke kontak yang kamu isi jika layanan pengiriman sudah dikonfigurasi. Kalau belum, buka menu Pesanan untuk melihat kodenya.</div>' : ''}
+    <button class="primary" onclick="openOrders()">${currentLanguage === 'en' ? 'Check orders' : 'Cek pesanan'}</button>
   `);
+  if(status==='processing') pollOrderStatus(id);
 }
 
 
@@ -4312,16 +4205,15 @@ async function openOrders(){
 
                   </span>
 
-                  <span class="status">
-
-                    ${escapeHTML(
-                      o.payment_status
-                    )}
-
+                  <span class="status ${o.fulfillment_status==='completed'?'status-completed':o.fulfillment_status==='processing'?'status-processing':o.fulfillment_status==='failed'?'status-failed':'status-pending'}">
+                    ${escapeHTML(statusLabel(o.fulfillment_status))}
                   </span>
 
                 </div>
 
+
+                <div class="order-note">📩 ${o.delivery_channel==='phone' ? 'Pengiriman ke nomor' : 'Pengiriman ke email'}: ${escapeHTML(o.delivery_channel==='phone' ? (o.customer_phone||'-') : (o.customer_email||'-'))}</div>
+                ${o.delivery_note ? `<div class="order-note">${escapeHTML(o.delivery_note)}</div>` : ''}
 
                 ${
                   o.redeem_code
