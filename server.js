@@ -18,7 +18,8 @@ const app = express();
 ========================================================= */
 
 const PORT = Number(process.env.PORT || 3000);
-const DB_PATH = String(process.env.DB_PATH || path.join(__dirname, 'data.db')).trim();
+const DEFAULT_DB_DIR = fs.existsSync('/data') ? '/data' : path.join(__dirname, 'data');
+const DB_PATH = String(process.env.DB_PATH || path.join(DEFAULT_DB_DIR, 'data.db')).trim();
 
 // Make sure a custom Railway volume/database directory exists.
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
@@ -180,6 +181,14 @@ addUserColumn('oauth_subject', 'oauth_subject TEXT');
 addUserColumn('display_name', 'display_name TEXT');
 addUserColumn('avatar_url', 'avatar_url TEXT');
 db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider,oauth_subject) WHERE oauth_provider IS NOT NULL AND oauth_subject IS NOT NULL`);
+// Enforce one account per email case-insensitively, even if the client changes capitalization.
+// Existing email values are normalized to lowercase before this index is created.
+db.prepare(`UPDATE users SET email=LOWER(TRIM(email)) WHERE email IS NOT NULL`).run();
+try {
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_nocase ON users(LOWER(email))`);
+} catch (error) {
+  console.error('Could not create case-insensitive email index:', error.message);
+}
 db.exec(`CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id)`);
 db.exec(`CREATE INDEX IF NOT EXISTS idx_password_resets_expiry ON password_resets(expires_at)`);
 
@@ -654,17 +663,11 @@ app.post(
 
       const existing =
         db.prepare(
-          'SELECT id FROM users WHERE email=?'
+          'SELECT id FROM users WHERE LOWER(email)=LOWER(?)'
         ).get(email);
 
       if(existing){
-
-        return jsonError(
-          res,
-          409,
-          'Email sudah terdaftar'
-        );
-
+        return jsonError(res,409,'Email sudah terdaftar. Gunakan login atau Lupa password.');
       }
 
       const passwordHash =
@@ -673,17 +676,18 @@ app.post(
           12
         );
 
-      const result =
-        db.prepare(`
-          INSERT INTO users(
-            email,
-            password_hash
-          )
+      let result;
+      try {
+        result = db.prepare(`
+          INSERT INTO users(email,password_hash)
           VALUES(?,?)
-        `).run(
-          email,
-          passwordHash
-        );
+        `).run(email,passwordHash);
+      } catch (insertError) {
+        if (String(insertError.message).toLowerCase().includes('unique')) {
+          return jsonError(res,409,'Email sudah terdaftar. Gunakan login atau Lupa password.');
+        }
+        throw insertError;
+      }
 
       const session = sessionForUser(result.lastInsertRowid);
       setSessionCookie(res,session.token);
@@ -763,7 +767,7 @@ app.post(
         db.prepare(`
           SELECT *
           FROM users
-          WHERE email=?
+          WHERE LOWER(email)=LOWER(?)
         `).get(email);
 
       if(
