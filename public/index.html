@@ -3094,6 +3094,11 @@ async function detectCountry(){
 
 function socialLogin(provider){
 
+  if(provider === "Google"){
+    window.location.href = "/api/auth/google";
+    return;
+  }
+
   showModal(`
 
     <div class="modal-head">
@@ -3347,6 +3352,13 @@ async function openAuth(mode){
 
     </div>
 
+    ${mode === "login" ? `
+      <div style="text-align:right;margin:-4px 0 12px">
+        <button type="button" class="mutelink" style="background:none;border:0;padding:0;cursor:pointer" onclick="openForgotPassword()">
+          ${currentLanguage === "en" ? "Forgot password?" : "Lupa password?"}
+        </button>
+      </div>
+    ` : ""}
 
     <button
       class="primary"
@@ -3416,6 +3428,93 @@ async function openAuth(mode){
   `);
 }
 
+
+function openForgotPassword(){
+  showModal(`
+    <div class="modal-head">
+      <h3>${currentLanguage === "en" ? "Forgot password" : "Lupa password"}</h3>
+      <button class="x" onclick="closeModal()">×</button>
+    </div>
+    <p class="sub">${currentLanguage === "en" ? "Enter your account email. If it is registered, we will send a secure reset link." : "Masukkan email akunmu. Jika terdaftar, kami akan mengirim link reset password yang aman."}</p>
+    <div class="field">
+      <label>Email</label>
+      <input id="forgotEmail" type="email" autocomplete="email" placeholder="nama@email.com">
+    </div>
+    <button class="primary" onclick="submitForgotPassword()">${currentLanguage === "en" ? "Send reset link" : "Kirim link reset"}</button>
+  `);
+}
+
+async function submitForgotPassword(){
+  const email = $("forgotEmail")?.value.trim();
+  if(!email || !email.includes("@")){
+    toast(currentLanguage === "en" ? "Enter a valid email." : "Masukkan email yang valid.");
+    return;
+  }
+  try{
+    const data = await api("/api/forgot-password",{method:"POST",body:JSON.stringify({email})});
+    closeModal();
+    toast(data.message || (currentLanguage === "en" ? "Check your email." : "Cek email kamu."));
+  }catch(error){ toast(error.message); }
+}
+
+function openResetPassword(rawToken){
+  showModal(`
+    <div class="modal-head">
+      <h3>${currentLanguage === "en" ? "Create new password" : "Buat password baru"}</h3>
+      <button class="x" onclick="closeModal()">×</button>
+    </div>
+    <p class="sub">${currentLanguage === "en" ? "This reset link is valid for 30 minutes." : "Link reset ini berlaku selama 30 menit."}</p>
+    <div class="field"><label>${currentLanguage === "en" ? "New password" : "Password baru"}</label><input id="resetPass" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter"></div>
+    <div class="field"><label>${currentLanguage === "en" ? "Repeat password" : "Ulangi password"}</label><input id="resetPass2" type="password" autocomplete="new-password" placeholder="Ulangi password"></div>
+    <button class="primary" onclick="submitResetPassword('${escapeHTML(rawToken)}')">${currentLanguage === "en" ? "Save new password" : "Simpan password baru"}</button>
+  `);
+}
+
+async function submitResetPassword(rawToken){
+  const password = $("resetPass")?.value || "";
+  const password2 = $("resetPass2")?.value || "";
+  if(password.length < 8) return toast(currentLanguage === "en" ? "Password must be at least 8 characters." : "Password minimal 8 karakter.");
+  if(password !== password2) return toast(currentLanguage === "en" ? "Passwords do not match." : "Password tidak sama.");
+  try{
+    const data = await api("/api/reset-password",{method:"POST",body:JSON.stringify({token:rawToken,password})});
+    localStorage.setItem(tokenKey,data.token);
+    localStorage.setItem(userEmailKey,data.email||"");
+    updateAccountUI();
+    history.replaceState({},document.title,"/");
+    closeModal();
+    toast(currentLanguage === "en" ? "✅ Password changed and you are logged in." : "✅ Password berhasil diganti dan kamu sudah login.");
+  }catch(error){ toast(error.message); }
+}
+
+async function handleOAuthAndReset(){
+  const hash = new URLSearchParams(location.hash.replace(/^#/ , ""));
+  const oauthToken = hash.get("oauth_token");
+  if(oauthToken){
+    localStorage.setItem(tokenKey,oauthToken);
+    try{
+      const data = await api("/api/me");
+      localStorage.setItem(userEmailKey,data.user?.email||"");
+      if(data.user?.display_name) localStorage.setItem(profileNameKey,data.user.display_name);
+      if(data.user?.avatar_url) localStorage.setItem(profileImageKey,data.user.avatar_url);
+      updateAccountUI();
+      history.replaceState({},document.title,location.pathname+location.search);
+      toast(currentLanguage === "en" ? "✅ Google login successful." : "✅ Login Google berhasil.");
+    }catch(error){
+      localStorage.removeItem(tokenKey);
+      toast(error.message);
+    }
+  }
+  const params = new URLSearchParams(location.search);
+  const resetToken = params.get("reset_token");
+  const oauthError = params.get("oauth_error");
+  if(resetToken){
+    history.replaceState({},document.title,location.pathname);
+    openResetPassword(resetToken);
+  } else if(oauthError){
+    history.replaceState({},document.title,location.pathname);
+    toast(currentLanguage === "en" ? "Google login failed. Check OAuth settings." : "Login Google gagal. Cek pengaturan OAuth.");
+  }
+}
 
 async function authSubmit(mode){
 
@@ -3512,7 +3611,11 @@ async function authSubmit(mode){
    LOGOUT
 ========================================= */
 
-function logout(){
+async function logout(){
+
+  try{
+    if(token()) await api("/api/logout",{method:"POST"});
+  }catch{}
 
   localStorage.removeItem(
     tokenKey
@@ -4537,6 +4640,8 @@ loadPerformance();
     ];
 
   updateAccountUI();
+
+  await handleOAuthAndReset();
 
   try{
 
