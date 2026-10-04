@@ -15,19 +15,13 @@ const app = express();
 
 /* =========================================================
    BASIC CONFIG
-========================================================== */
+========================================================= */
 
 const PORT = Number(process.env.PORT || 3000);
 const DB_PATH = String(process.env.DB_PATH || path.join(__dirname, 'data.db')).trim();
 
-// Make sure database directory exists
-try {
-  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-} catch (error) {
-  console.error('Failed to create database directory:', error.message);
-  process.exit(1);
-}
-
+// Make sure a custom Railway volume/database directory exists.
+fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 const SESSION_DAYS = 30;
 const CODE_RESERVATION_MINUTES = 15;
 
@@ -55,110 +49,102 @@ app.use(
 
 /* =========================================================
    DATABASE
-========================================================== */
+========================================================= */
 
-let db;
+const db = new Database(DB_PATH);
 
-try {
-  db = new Database(DB_PATH);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
+db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
 
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  );
 
-    CREATE TABLE IF NOT EXISTS sessions(
-      token_hash TEXT PRIMARY KEY,
-      user_id INTEGER NOT NULL,
-      expires_at INTEGER NOT NULL,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  CREATE TABLE IF NOT EXISTS sessions(
+    token_hash TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 
-      FOREIGN KEY(user_id)
-        REFERENCES users(id)
-        ON DELETE CASCADE
-    );
+    FOREIGN KEY(user_id)
+      REFERENCES users(id)
+      ON DELETE CASCADE
+  );
 
-    CREATE TABLE IF NOT EXISTS products(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      provider TEXT NOT NULL,
-      name TEXT NOT NULL,
-      duration_days INTEGER NOT NULL,
-      price INTEGER NOT NULL CHECK(price >= 0),
-      active INTEGER NOT NULL DEFAULT 1
-    );
+  CREATE TABLE IF NOT EXISTS products(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    provider TEXT NOT NULL,
+    name TEXT NOT NULL,
+    duration_days INTEGER NOT NULL,
+    price INTEGER NOT NULL CHECK(price >= 0),
+    active INTEGER NOT NULL DEFAULT 1
+  );
 
-    CREATE TABLE IF NOT EXISTS codes(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      product_id INTEGER NOT NULL,
-      redeem_code TEXT UNIQUE NOT NULL,
-      status TEXT NOT NULL DEFAULT 'available',
-      order_id TEXT,
-      reserved_until INTEGER,
+  CREATE TABLE IF NOT EXISTS codes(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    redeem_code TEXT UNIQUE NOT NULL,
+    status TEXT NOT NULL DEFAULT 'available',
+    order_id TEXT,
+    reserved_until INTEGER,
 
-      FOREIGN KEY(product_id)
-        REFERENCES products(id)
-        ON DELETE CASCADE
-    );
+    FOREIGN KEY(product_id)
+      REFERENCES products(id)
+      ON DELETE CASCADE
+  );
 
-    CREATE TABLE IF NOT EXISTS orders(
-      id TEXT PRIMARY KEY,
-      user_id INTEGER,
-      product_id INTEGER NOT NULL,
-      code_id INTEGER,
-      amount INTEGER NOT NULL,
-      payment_status TEXT NOT NULL DEFAULT 'pending',
-      redeem_code TEXT,
-      midtrans_transaction_id TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      paid_at TEXT,
+  CREATE TABLE IF NOT EXISTS orders(
+    id TEXT PRIMARY KEY,
+    user_id INTEGER,
+    product_id INTEGER NOT NULL,
+    code_id INTEGER,
+    amount INTEGER NOT NULL,
+    payment_status TEXT NOT NULL DEFAULT 'pending',
+    redeem_code TEXT,
+    midtrans_transaction_id TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    paid_at TEXT,
 
-      FOREIGN KEY(user_id)
-        REFERENCES users(id)
-        ON DELETE SET NULL,
+    FOREIGN KEY(user_id)
+      REFERENCES users(id)
+      ON DELETE SET NULL,
 
-      FOREIGN KEY(product_id)
-        REFERENCES products(id)
-        ON DELETE RESTRICT,
+    FOREIGN KEY(product_id)
+      REFERENCES products(id)
+      ON DELETE RESTRICT,
 
-      FOREIGN KEY(code_id)
-        REFERENCES codes(id)
-        ON DELETE SET NULL
-    );
+    FOREIGN KEY(code_id)
+      REFERENCES codes(id)
+      ON DELETE SET NULL
+  );
 
-    CREATE INDEX IF NOT EXISTS idx_sessions_expiry
-      ON sessions(expires_at);
+  CREATE INDEX IF NOT EXISTS idx_sessions_expiry
+    ON sessions(expires_at);
 
-    CREATE INDEX IF NOT EXISTS idx_codes_stock
-      ON codes(product_id,status);
+  CREATE INDEX IF NOT EXISTS idx_codes_stock
+    ON codes(product_id,status);
 
-    CREATE INDEX IF NOT EXISTS idx_codes_reservation
-      ON codes(status,reserved_until);
+  CREATE INDEX IF NOT EXISTS idx_codes_reservation
+    ON codes(status,reserved_until);
 
-    CREATE INDEX IF NOT EXISTS idx_orders_user
-      ON orders(user_id,created_at);
+  CREATE INDEX IF NOT EXISTS idx_orders_user
+    ON orders(user_id,created_at);
 
-    CREATE INDEX IF NOT EXISTS idx_orders_payment
-      ON orders(payment_status);
+  CREATE INDEX IF NOT EXISTS idx_orders_payment
+    ON orders(payment_status);
 
-    CREATE INDEX IF NOT EXISTS idx_orders_midtrans
-      ON orders(midtrans_transaction_id);
-  `);
-
-  console.log('✓ Database initialized successfully');
-} catch (error) {
-  console.error('Failed to initialize database:', error.message);
-  process.exit(1);
-}
+  CREATE INDEX IF NOT EXISTS idx_orders_midtrans
+    ON orders(midtrans_transaction_id);
+`);
 
 
 /* =========================================================
    MIDTRANS
-========================================================== */
+========================================================= */
 
 const MIDTRANS_IS_PRODUCTION =
   process.env.MIDTRANS_IS_PRODUCTION === 'true';
@@ -188,7 +174,7 @@ const snap =
 
 /* =========================================================
    HELPERS
-========================================================== */
+========================================================= */
 
 const safeEmail = value =>
   String(value || '')
@@ -215,23 +201,19 @@ const newOrderId = () =>
     .toString('hex')
     .toUpperCase();
 
-const toMoney = value => {
-  const num = Number(value);
-  return Number.isFinite(num) && num > 0 ? num : 0;
-};
+const toMoney = value =>
+  Number(value);
 
 const jsonError = (
   res,
   status,
   message
-) => {
-  if (res.headersSent) return;
+) =>
   res
     .status(status)
     .json({
       error: message
     });
-};
 
 const isValidEmail = email =>
   /^\S+@\S+\.\S+$/.test(email);
@@ -243,29 +225,10 @@ const validDurations = [
   30
 ];
 
-const releaseReservedCode = (codeId) => {
-  if (!codeId) return;
-
-  try {
-    db.prepare(`
-      UPDATE codes
-      SET
-        status='available',
-        order_id=NULL,
-        reserved_until=NULL
-      WHERE
-        id=?
-        AND status='reserved'
-    `).run(codeId);
-  } catch (error) {
-    console.error('Failed to release reserved code:', error);
-  }
-};
-
 
 /* =========================================================
    CLEAN EXPIRED SESSIONS
-========================================================== */
+========================================================= */
 
 function cleanupSessions(){
 
@@ -295,8 +258,8 @@ setInterval(
 
 
 /* =========================================================
-    AUTH MIDDLEWARE
-========================================================== */
+   AUTH MIDDLEWARE
+========================================================= */
 
 function auth(
   req,
@@ -327,48 +290,43 @@ function auth(
 
   }
 
-  try {
-    const session =
-      db.prepare(`
-        SELECT
-          token_hash,
-          user_id,
-          expires_at
-        FROM sessions
-        WHERE token_hash = ?
-          AND expires_at > ?
-      `).get(
-        hashToken(bearer),
-        Date.now()
-      );
+  const session =
+    db.prepare(`
+      SELECT
+        token_hash,
+        user_id,
+        expires_at
+      FROM sessions
+      WHERE token_hash = ?
+        AND expires_at > ?
+    `).get(
+      hashToken(bearer),
+      Date.now()
+    );
 
-    if(!session){
+  if(!session){
 
-      return jsonError(
-        res,
-        401,
-        'Sesi login berakhir'
-      );
+    return jsonError(
+      res,
+      401,
+      'Sesi login berakhir'
+    );
 
-    }
-
-    req.userId =
-      Number(session.user_id);
-
-    req.rawToken =
-      bearer;
-
-    next();
-  } catch (error) {
-    console.error('Auth middleware error:', error);
-    jsonError(res, 500, 'Authentication error');
   }
+
+  req.userId =
+    Number(session.user_id);
+
+  req.rawToken =
+    bearer;
+
+  next();
 }
 
 
 /* =========================================================
-    ADMIN MIDDLEWARE
-========================================================== */
+   ADMIN MIDDLEWARE
+========================================================= */
 
 function admin(
   req,
@@ -390,36 +348,26 @@ function admin(
     return jsonError(res,401,'Unauthorized');
   }
 
-  try {
-    const a = Buffer.from(receivedKey);
-    const b = Buffer.from(configuredKey);
-    const same = a.length === b.length && crypto.timingSafeEqual(a,b);
+  const a = Buffer.from(receivedKey);
+  const b = Buffer.from(configuredKey);
+  const same = a.length === b.length && crypto.timingSafeEqual(a,b);
 
-    if(!same){
-      return jsonError(res,401,'Unauthorized');
-    }
-
-    next();
-  } catch (error) {
-    console.error('Admin middleware error:', error);
-    jsonError(res, 401, 'Unauthorized');
+  if(!same){
+    return jsonError(res,401,'Unauthorized');
   }
+
+  next();
 }
 
 
 /* =========================================================
-    HEALTH / CONFIG
-========================================================== */
+   HEALTH / CONFIG
+========================================================= */
 
 app.get('/api/admin/check', admin, (req,res) => {
   res.json({ok:true});
 });
 
-
-app.get(
-  '/api/health',
-  (req,res) => res.json({ ok:true, service:'top-up-clouds', time:new Date().toISOString() })
-);
 
 app.get(
   '/health',
@@ -454,8 +402,8 @@ app.get(
 
 
 /* =========================================================
-    PRODUCTS
-========================================================== */
+   PRODUCTS
+========================================================= */
 
 app.get(
   '/api/products',
@@ -480,7 +428,7 @@ app.get(
             duration_days ASC
         `).all();
 
-      res.json(rows || []);
+      res.json(rows);
 
     }catch(error){
 
@@ -502,8 +450,8 @@ app.get(
 
 
 /* =========================================================
-    REGISTER
-========================================================== */
+   REGISTER
+========================================================= */
 
 app.post(
   '/api/register',
@@ -630,8 +578,8 @@ app.post(
 
 
 /* =========================================================
-    LOGIN
-========================================================== */
+   LOGIN
+========================================================= */
 
 app.post(
   '/api/login',
@@ -735,8 +683,8 @@ app.post(
 
 
 /* =========================================================
-    LOGOUT
-========================================================== */
+   LOGOUT
+========================================================= */
 
 app.post(
   '/api/logout',
@@ -777,8 +725,8 @@ app.post(
 
 
 /* =========================================================
-    RESERVE REDEEM CODE
-========================================================== */
+   RESERVE REDEEM CODE
+========================================================= */
 
 function reserveCode(
   productId,
@@ -874,19 +822,14 @@ function reserveCode(
 
     });
 
-  try {
-    return transaction();
-  } catch (error) {
-    console.error('Reserve code error:', error);
-    return null;
-  }
+  return transaction();
 
 }
 
 
 /* =========================================================
-    CREATE ORDER
-========================================================== */
+   CREATE ORDER
+========================================================= */
 
 app.post(
   '/api/orders',
@@ -1049,31 +992,25 @@ app.post(
       /*
        * Create Midtrans transaction.
        */
-      let transaction;
-      try {
-        transaction =
-          await snap.createTransaction({
+      const transaction =
+        await snap.createTransaction({
 
-            transaction_details:{
-              order_id:
-                orderId,
+          transaction_details:{
+            order_id:
+              orderId,
 
-              gross_amount:
-                toMoney(
-                  product.price
-                )
-            },
+            gross_amount:
+              toMoney(
+                product.price
+              )
+          },
 
-            customer_details:{
-              email:
-                user.email
-            }
+          customer_details:{
+            email:
+              user.email
+          }
 
-          });
-      } catch (midtransError) {
-        console.error('Midtrans error:', midtransError.message);
-        throw new Error('Payment gateway error: ' + midtransError.message);
-      }
+        });
 
 
       if(
@@ -1121,7 +1058,16 @@ app.post(
 
           if(reserved){
 
-            releaseReservedCode(
+            db.prepare(`
+              UPDATE codes
+              SET
+                status='available',
+                order_id=NULL,
+                reserved_until=NULL
+              WHERE
+                id=?
+                AND status='reserved'
+            `).run(
               reserved.id
             );
 
@@ -1162,8 +1108,8 @@ app.post(
 
 
 /* =========================================================
-    MIDTRANS SIGNATURE
-========================================================== */
+   MIDTRANS SIGNATURE
+========================================================= */
 
 function verifyMidtransSignature(
   notification
@@ -1171,8 +1117,8 @@ function verifyMidtransSignature(
 
   if(
     !notification ||
-    typeof notification.order_id !== 'string' ||
-    typeof notification.status_code !== 'string' ||
+    !notification.order_id ||
+    !notification.status_code ||
     !notification.gross_amount
   ){
 
@@ -1213,8 +1159,8 @@ function verifyMidtransSignature(
       notification.signature_key || ''
     ).toLowerCase();
 
+
   if(
-    !received ||
     received.length !==
     expected.length
   ){
@@ -1223,22 +1169,18 @@ function verifyMidtransSignature(
 
   }
 
-  try {
-    return crypto.timingSafeEqual(
-      Buffer.from(received),
-      Buffer.from(expected)
-    );
-  } catch (error) {
-    console.error('Signature comparison error:', error);
-    return false;
-  }
+
+  return crypto.timingSafeEqual(
+    Buffer.from(received),
+    Buffer.from(expected)
+  );
 
 }
 
 
 /* =========================================================
-    MARK ORDER PAID
-========================================================== */
+   MARK ORDER PAID
+========================================================= */
 
 const markPaid =
   db.transaction(
@@ -1294,7 +1236,6 @@ const markPaid =
         );
 
       if(
-        !Number.isFinite(notificationAmount) ||
         notificationAmount !==
         Number(existing.amount)
       ){
@@ -1330,10 +1271,6 @@ const markPaid =
           code.status !== 'available'
         )
       ){
-
-        releaseReservedCode(
-          existing.code_id
-        );
 
         db.prepare(`
           UPDATE orders
@@ -1418,8 +1355,8 @@ const markPaid =
 
 
 /* =========================================================
-    MIDTRANS NOTIFICATION
-========================================================== */
+   MIDTRANS NOTIFICATION
+========================================================= */
 
 app.post(
   '/api/midtrans/notification',
@@ -1441,7 +1378,6 @@ app.post(
         )
       ){
 
-        console.warn('Invalid Midtrans signature');
         return res
           .status(403)
           .send(
@@ -1467,7 +1403,6 @@ app.post(
        */
       if(!order){
 
-        console.warn('Order not found:', notification.order_id);
         return res.send('OK');
 
       }
@@ -1508,14 +1443,10 @@ app.post(
 
       if(paid){
 
-        try {
-          markPaid(
-            notification,
-            order
-          );
-        } catch (error) {
-          console.error('Mark paid error:', error);
-        }
+        markPaid(
+          notification,
+          order
+        );
 
       }
 
@@ -1531,31 +1462,36 @@ app.post(
         transactionStatus
       )){
 
-        try {
-          db.transaction(() => {
+        db.transaction(() => {
 
-            db.prepare(`
-              UPDATE orders
-              SET
-                payment_status=?,
-                midtrans_transaction_id=?
-              WHERE id=?
-                AND payment_status != 'paid'
-            `).run(
-              transactionStatus,
-              notification.transaction_id || null,
-              order.id
-            );
+          db.prepare(`
+            UPDATE orders
+            SET
+              payment_status=?,
+              midtrans_transaction_id=?
+            WHERE id=?
+              AND payment_status != 'paid'
+          `).run(
+            transactionStatus,
+            notification.transaction_id || null,
+            order.id
+          );
 
 
-            releaseReservedCode(
-              order.code_id
-            );
+          db.prepare(`
+            UPDATE codes
+            SET
+              status='available',
+              order_id=NULL,
+              reserved_until=NULL
+            WHERE
+              id=?
+              AND status='reserved'
+          `).run(
+            order.code_id
+          );
 
-          })();
-        } catch (error) {
-          console.error('Failed payment transaction error:', error);
-        }
+        })();
 
       }
 
@@ -1564,27 +1500,23 @@ app.post(
        */
       else{
 
-        try {
-          db.prepare(`
-            UPDATE orders
-            SET
-              payment_status=?,
-              midtrans_transaction_id=?
-            WHERE
-              id=?
-              AND payment_status != 'paid'
-          `).run(
-            transactionStatus ||
-              'pending',
+        db.prepare(`
+          UPDATE orders
+          SET
+            payment_status=?,
+            midtrans_transaction_id=?
+          WHERE
+            id=?
+            AND payment_status != 'paid'
+        `).run(
+          transactionStatus ||
+            'pending',
 
-            notification.transaction_id ||
-              null,
+          notification.transaction_id ||
+            null,
 
-            order.id
-          );
-        } catch (error) {
-          console.error('Pending payment update error:', error);
-        }
+          order.id
+        );
 
       }
 
@@ -1613,8 +1545,8 @@ app.post(
 
 
 /* =========================================================
-    USER ORDERS
-========================================================== */
+   USER ORDERS
+========================================================= */
 
 app.get(
   '/api/orders',
@@ -1645,7 +1577,7 @@ app.get(
           req.userId
         );
 
-      res.json(rows || []);
+      res.json(rows);
 
     }catch(error){
 
@@ -1667,8 +1599,8 @@ app.get(
 
 
 /* =========================================================
-    SINGLE ORDER
-========================================================== */
+   SINGLE ORDER
+========================================================= */
 
 app.get(
   '/api/orders/:id',
@@ -1750,8 +1682,8 @@ app.get(
 
 
 /* =========================================================
-    ADMIN PRODUCTS - CREATE
-========================================================== */
+   ADMIN PRODUCTS - CREATE
+========================================================= */
 
 app.post(
   '/api/admin/products',
@@ -1844,8 +1776,8 @@ app.post(
 
 
 /* =========================================================
-    ADMIN PRODUCTS - LIST
-========================================================== */
+   ADMIN PRODUCTS - LIST
+========================================================= */
 
 app.get(
   '/api/admin/products',
@@ -1861,7 +1793,7 @@ app.get(
           ORDER BY id DESC
         `).all();
 
-      res.json(rows || []);
+      res.json(rows);
 
     }catch(error){
 
@@ -1883,8 +1815,8 @@ app.get(
 
 
 /* =========================================================
-    ADMIN PRODUCTS - UPDATE
-========================================================== */
+   ADMIN PRODUCTS - UPDATE
+========================================================= */
 
 app.patch(
   '/api/admin/products/:id',
@@ -2120,8 +2052,81 @@ app.patch(
 
 
 /* =========================================================
-    ADMIN CODES - ADD
-========================================================== */
+   ADMIN PRODUCTS - DELETE
+   Menghapus produk + stok kode yang masih terkait.
+   Produk yang sudah pernah dipakai order tidak dihapus agar
+   riwayat transaksi tetap aman.
+========================================================= */
+
+app.delete(
+  '/api/admin/products/:id',
+  admin,
+  (req,res) => {
+
+    try{
+
+      const id = Number(req.params.id);
+
+      if(!Number.isInteger(id) || id <= 0){
+        return jsonError(res,400,'ID produk tidak valid');
+      }
+
+      const product = db.prepare(`
+        SELECT id, provider, name
+        FROM products
+        WHERE id=?
+      `).get(id);
+
+      if(!product){
+        return jsonError(res,404,'Produk tidak ditemukan');
+      }
+
+      const orderCount = db.prepare(`
+        SELECT COUNT(*) AS count
+        FROM orders
+        WHERE product_id=?
+      `).get(id).count;
+
+      if(Number(orderCount) > 0){
+        return jsonError(
+          res,
+          409,
+          'Produk tidak bisa dihapus karena sudah memiliki riwayat order. Nonaktifkan produk saja.'
+        );
+      }
+
+      const transaction = db.transaction(() => {
+        db.prepare('DELETE FROM codes WHERE product_id=?').run(id);
+        db.prepare('DELETE FROM products WHERE id=?').run(id);
+      });
+
+      transaction();
+
+      res.json({
+        ok:true,
+        deleted_id:id,
+        message:'Produk berhasil dihapus'
+      });
+
+    }catch(error){
+
+      console.error('Admin delete product error:',error);
+
+      jsonError(
+        res,
+        500,
+        'Gagal menghapus produk'
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   ADMIN CODES - ADD
+========================================================= */
 
 app.post(
   '/api/admin/codes',
@@ -2322,8 +2327,8 @@ app.post(
 
 
 /* =========================================================
-    ADMIN CODES - LIST
-========================================================== */
+   ADMIN CODES - LIST
+========================================================= */
 
 app.get(
   '/api/admin/codes',
@@ -2351,7 +2356,7 @@ app.get(
           LIMIT 500
         `).all();
 
-      res.json(rows || []);
+      res.json(rows);
 
     }catch(error){
 
@@ -2373,8 +2378,8 @@ app.get(
 
 
 /* =========================================================
-    ADMIN ORDERS
-========================================================== */
+   ADMIN ORDERS
+========================================================= */
 
 app.get(
   '/api/admin/orders',
@@ -2401,7 +2406,7 @@ app.get(
           LIMIT 500
         `).all();
 
-      res.json(rows || []);
+      res.json(rows);
 
     }catch(error){
 
@@ -2423,8 +2428,8 @@ app.get(
 
 
 /* =========================================================
-    ADMIN STATS
-========================================================== */
+   ADMIN STATS
+========================================================= */
 
 app.get(
   '/api/admin/stats',
@@ -2436,35 +2441,35 @@ app.get(
       const users =
         db.prepare(
           'SELECT COUNT(*) AS count FROM users'
-        ).get().count || 0;
+        ).get().count;
 
       const products =
         db.prepare(`
           SELECT COUNT(*) AS count
           FROM products
           WHERE active=1
-        `).get().count || 0;
+        `).get().count;
 
       const availableCodes =
         db.prepare(`
           SELECT COUNT(*) AS count
           FROM codes
           WHERE status='available'
-        `).get().count || 0;
+        `).get().count;
 
       const paidOrders =
         db.prepare(`
           SELECT COUNT(*) AS count
           FROM orders
           WHERE payment_status='paid'
-        `).get().count || 0;
+        `).get().count;
 
       const pendingOrders =
         db.prepare(`
           SELECT COUNT(*) AS count
           FROM orders
           WHERE payment_status='pending'
-        `).get().count || 0;
+        `).get().count;
 
 
       res.json({
@@ -2506,8 +2511,8 @@ app.get(
 
 
 /* =========================================================
-    404 API HANDLER
-========================================================== */
+   404 API HANDLER
+========================================================= */
 
 app.use(
   '/api',
@@ -2524,8 +2529,8 @@ app.use(
 
 
 /* =========================================================
-    FRONTEND ROUTES
-========================================================== */
+   FRONTEND ROUTES
+========================================================= */
 
 app.get(
   '/admin',
@@ -2559,8 +2564,8 @@ app.use((req,res,next) => {
 
 
 /* =========================================================
-    ERROR HANDLER
-========================================================== */
+   ERROR HANDLER
+========================================================= */
 
 app.use(
   (
@@ -2584,7 +2589,7 @@ app.use(
     jsonError(
       res,
       500,
-      'Kesalahan server internal'
+      'Internal server error'
     );
 
   }
@@ -2592,8 +2597,8 @@ app.use(
 
 
 /* =========================================================
-    START SERVER
-========================================================== */
+   START SERVER
+========================================================= */
 
 console.log('Startup check:', {
   publicIndex: fs.existsSync(path.join(__dirname,'public','index.html')),
@@ -2608,11 +2613,11 @@ app.listen(
   () => {
 
     console.log(
-      `✓ Top up Clouds running on port ${PORT}`
+      `Top up Clouds running on port ${PORT}`
     );
 
     console.log(
-      `✓ Midtrans mode: ${
+      `Midtrans mode: ${
         MIDTRANS_IS_PRODUCTION
           ? 'PRODUCTION'
           : 'SANDBOX'
@@ -2620,26 +2625,26 @@ app.listen(
     );
 
     console.log(
-      `✓ Midtrans Client Key: ${
+      `Midtrans Client Key: ${
         MIDTRANS_CLIENT_KEY
           ? 'configured'
-          : 'MISSING ⚠️'
+          : 'MISSING'
       }`
     );
 
     console.log(
-      `✓ Midtrans Server Key: ${
+      `Midtrans Server Key: ${
         MIDTRANS_SERVER_KEY
           ? 'configured'
-          : 'MISSING ⚠️'
+          : 'MISSING'
       }`
     );
 
     console.log(
-      `✓ Admin Key: ${
+      `Admin Key: ${
         process.env.ADMIN_KEY
           ? 'configured'
-          : 'MISSING ⚠️'
+          : 'MISSING'
       }`
     );
 
